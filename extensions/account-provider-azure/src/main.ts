@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as os from 'os';
+import * as azure from 'azure-arm-sql';
 
 import * as constants from './constants';
 import { AzureAccountProviderService } from './account-provider/azureAccountProviderService';

@@ -2,14 +2,21 @@
   "name": "account-provider-azure",
   "version": "0.0.1",
   "publisher": "Microsoft",
-  "engines": { "vscode": "*" },
+  "engines": {
+    "vscode": "*"
+  },
   "main": "./out/main",
-  "activationEvents": [ "*" ],
+  "activationEvents": [
+    "*"
+  ],
   "scripts": {
     "compile": "gulp compile-extension:account-provider-azure"
   },
   "dependencies": {
     "adal-node": "0.1.25",
+    "azure-arm-resource": "^3.1.1-preview",
+    "azure-arm-sql": "^3.0.0",
+    "ms-rest": "^2.3.2",
     "request": "2.63.0",
     "vscode-nls": "2.0.2"
   },

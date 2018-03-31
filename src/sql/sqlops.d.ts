@@ -1544,7 +1544,7 @@ declare module 'sqlops' {
 		startIpAddress: string;
 		endIpAddress: string;
 		serverName: string;
-		securityTokenMappings: {};
+		securityTokenMappings: {[key: string]: any};
 	}
 
 	export interface CreateFirewallRuleResponse {
