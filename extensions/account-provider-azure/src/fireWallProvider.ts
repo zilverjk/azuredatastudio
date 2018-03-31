@@ -20,7 +20,7 @@ export class FireWallProvider implements Disposable {
 			{
 				displayName: 'Azure SQL Resource Provider', // TODO Localize
 				id: 'Microsoft.Azure.SQL.ResourceProvider',
-				settings: { }
+				settings: {}
 			},
 			{
 				handleFirewallRule: this.handleFirewallRule,
