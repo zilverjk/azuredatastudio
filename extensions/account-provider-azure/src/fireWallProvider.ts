@@ -47,19 +47,15 @@ export class FireWallProvider implements Disposable {
 		for (let i = 0; i < subs.length; i++) {
 			let e = subs[i];
 			let sqlclient = new azureSql.SqlManagementClient(creds, e.subscriptionId);
-			let resourceClient = new azureResource.ResourceManagementClient(creds, e.subscriptionId);
-			let groups = await resourceClient.resourceGroups.list();
-			for (let j = 0; j < groups.length; j++) {
-				let group = groups[j];
-				let servers = await sqlclient.servers.listByResourceGroup(group.name);
-				let server = servers.find(server => server.fullyQualifiedDomainName === firewallruleInfo.serverName);
-				if (server) {
-					try {
-						let result = await sqlclient.firewallRules.createOrUpdate(group.name, server.name, 'mssql', { startIpAddress: firewallruleInfo.startIpAddress, endIpAddress: firewallruleInfo.endIpAddress });
-						return { result: true, errorMessage: undefined };
-					} catch (e) {
-						return { result: true, errorMessage: undefined };
-					}
+			let servers = await sqlclient.servers.list();
+			let server = servers.find(server => server.fullyQualifiedDomainName === firewallruleInfo.serverName);
+			if (server) {
+				let { resourceGroup } = parseResourceId(server.id);
+				try {
+					let result = await sqlclient.firewallRules.createOrUpdate(resourceGroup, server.name, 'mssql', { startIpAddress: firewallruleInfo.startIpAddress, endIpAddress: firewallruleInfo.endIpAddress });
+					return { result: true, errorMessage: undefined };
+				} catch (e) {
+					return { result: true, errorMessage: undefined };
 				}
 			}
 		}
@@ -82,4 +78,21 @@ export class FireWallProvider implements Disposable {
 
 	public dispose() {
 	}
+}
+
+/**
+ * Takes a resource id of the shape /subscriptions/{id}/.... and returns the sub-id
+ * @param input
+ */
+function parseResourceId(input: string): { subscription: string, resourceGroup: string } {
+	if (!input) {
+		return undefined;
+	}
+
+	let split = input.split('/');
+	let index = split.indexOf('subscriptions');
+	let subscription = split[index + 1];
+	index = split.indexOf('resourceGroups');
+	let resourceGroup = split[index + 1];
+	return { subscription, resourceGroup };
 }
