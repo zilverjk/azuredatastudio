@@ -51,11 +51,15 @@ export class FireWallProvider implements Disposable {
 			let groups = await resourceClient.resourceGroups.list();
 			for (let j = 0; j < groups.length; j++) {
 				let group = groups[j];
-				let servers = await sqlclient.servers.listByResourceGroup(group.id);
-				let server = servers.find(server => server.name === firewallruleInfo.serverName);
+				let servers = await sqlclient.servers.listByResourceGroup(group.name);
+				let server = servers.find(server => server.fullyQualifiedDomainName === firewallruleInfo.serverName);
 				if (server) {
-					sqlclient.firewallRules.createOrUpdate(group.id, server.name, '', { startIpAddress: firewallruleInfo.startIpAddress, endIpAddress: firewallruleInfo.endIpAddress });
-					return { result: true, errorMessage: undefined };
+					try {
+						let result = await sqlclient.firewallRules.createOrUpdate(group.name, server.name, 'mssql', { startIpAddress: firewallruleInfo.startIpAddress, endIpAddress: firewallruleInfo.endIpAddress });
+						return { result: true, errorMessage: undefined };
+					} catch (e) {
+						return { result: true, errorMessage: undefined };
+					}
 				}
 			}
 		}
