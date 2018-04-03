@@ -13,6 +13,7 @@ import * as azure from 'azure-arm-sql';
 
 import * as constants from './constants';
 import { AzureAccountProviderService } from './account-provider/azureAccountProviderService';
+import { FireWallProvider } from './fireWallProvider';
 
 // The function is a duplicate of \src\paths.js. IT would be better to import path.js but it doesn't
 // work for now because the extension is running in different process.
@@ -49,4 +50,5 @@ export function activate(context: vscode.ExtensionContext): void {
 	const accountProviderService = new AzureAccountProviderService(context, storagePath);
 	context.subscriptions.push(accountProviderService);
 	accountProviderService.activate();
+	const fireWallProvider = new FireWallProvider(accountProviderService);
 }

@@ -37,7 +37,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	config.strictSSL = vscode.workspace.getConfiguration('http').get('proxyStrictSSL') || true;
 
 	const credentialsStore = new CredentialStore(config);
-	const resourceProvider = new AzureResourceProvider(config);
+	// const resourceProvider = new AzureResourceProvider(config);
 	let languageClient: SqlOpsDataClient;
 
 	const serverdownloader = new ServerProvider(config);
@@ -77,7 +77,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		statusView.text = 'Starting service';
 		languageClient.start();
 		credentialsStore.start();
-		resourceProvider.start();
+		// resourceProvider.start();
 	}, e => {
 		Telemetry.sendTelemetryEvent('ServiceInitializingFailed');
 		vscode.window.showErrorMessage('Failed to start Sql tools service');
@@ -86,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	let contextProvider = new ContextProvider();
 	context.subscriptions.push(contextProvider);
 	context.subscriptions.push(credentialsStore);
-	context.subscriptions.push(resourceProvider);
+	// context.subscriptions.push(resourceProvider);
 	context.subscriptions.push({ dispose: () => languageClient.stop() });
 }
 

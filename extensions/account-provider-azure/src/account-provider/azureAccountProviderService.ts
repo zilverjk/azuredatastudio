@@ -26,7 +26,7 @@ export class AzureAccountProviderService implements vscode.Disposable {
 
 	// MEMBER VARIABLES ////////////////////////////////////////////////////////
 	private _accountDisposals: { [accountProviderId: string]: vscode.Disposable };
-	private _accountProviders: { [accountProviderId: string]: AzureAccountProvider };
+	public _accountProviders: { [accountProviderId: string]: AzureAccountProvider };
 	private _credentialProvider: sqlops.CredentialProvider;
 	private _configChangePromiseChain: Thenable<void>;
 	private _currentConfig: vscode.WorkspaceConfiguration;
