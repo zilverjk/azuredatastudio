@@ -91,6 +91,7 @@
                     "type": {
                         "count": null
                     },
+                    "autoRefreshInterval": 1,
                     "queryFile": "./sql/backup_insight.sql",
                     "details": {
                         "queryFile": "./sql/backup_detail.sql",

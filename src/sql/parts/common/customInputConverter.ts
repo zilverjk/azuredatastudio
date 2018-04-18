@@ -13,6 +13,8 @@ import URI from 'vs/base/common/uri';
 import { IEditorInput } from 'vs/platform/editor/common/editor';
 import { IQueryEditorOptions } from 'sql/parts/query/common/queryEditorService';
 import { QueryPlanInput } from 'sql/parts/queryPlan/queryPlanInput';
+import * as mime from 'vs/base/common/mime';
+import { StaticServices } from 'vs/editor/standalone/browser/standaloneServices';
 
 const fs = require('fs');
 
@@ -99,7 +101,9 @@ function getQueryEditorFileUri(input: EditorInput): URI {
 		if (uri) {
 			let isValidUri: boolean = !!uri && !!uri.toString;
 
-			if (isValidUri && (hasFileExtension(sqlFileTypes, input, true) || hasSqlFileMode(input)) ) {
+			let isSqlMime = StaticServices.modeService.get().getModeId(mime.guessMimeTypes(input.getResource().path).join(',')) === 'sql';
+
+			if (isValidUri && (isSqlMime || hasSqlFileMode(input)) ) {
 				return uri;
 			}
 		}
@@ -150,6 +154,7 @@ function hasSqlFileMode(input: EditorInput): boolean {
  */
 function hasFileExtension(extensions: string[], input: EditorInput, checkUntitledFileType: boolean): boolean {
 	// Check the extension type
+	let res = StaticServices.modeService.get().getModeId(mime.guessMimeTypes(input.getResource().path).join(','));
 	let lastPeriodIndex = input.getName().lastIndexOf('.');
 	if (lastPeriodIndex > -1) {
 		let extension: string = input.getName().substr(lastPeriodIndex + 1).toUpperCase();
