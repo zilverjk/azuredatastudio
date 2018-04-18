@@ -14,7 +14,8 @@ import { IEditorInput } from 'vs/platform/editor/common/editor';
 import { IQueryEditorOptions } from 'sql/parts/query/common/queryEditorService';
 import { QueryPlanInput } from 'sql/parts/queryPlan/queryPlanInput';
 import * as mime from 'vs/base/common/mime';
-import { StaticServices } from 'vs/editor/standalone/browser/standaloneServices';
+import { TPromise } from 'vs/base/common/winjs.base';
+import { IModeService } from 'vs/editor/common/services/modeService';
 
 const fs = require('fs');
 
@@ -33,27 +34,31 @@ export const sqlModeId = 'sql';
  * @param options Editor options for controlling the conversion
  * @param instantiationService The instatianation service to use to create the new input types
  */
-export function convertEditorInput(input: EditorInput, options: IQueryEditorOptions, instantiationService: IInstantiationService): EditorInput {
+export function convertEditorInput(input: EditorInput, options: IQueryEditorOptions, instantiationService: IInstantiationService, modeService: IModeService): TPromise<EditorInput> {
 	let denyQueryEditor = options && options.denyQueryEditor;
 	if (input && !denyQueryEditor) {
 		//QueryInput
-		let uri: URI = getQueryEditorFileUri(input);
-		if (uri) {
-			const queryResultsInput: QueryResultsInput = instantiationService.createInstance(QueryResultsInput, uri.toString());
-			let queryInput: QueryInput = instantiationService.createInstance(QueryInput, input.getName(), '', input, queryResultsInput, undefined);
-			return queryInput;
-		}
+		return getQueryEditorFileUri(input, modeService).then(uri => {
+			if (uri) {
+				const queryResultsInput: QueryResultsInput = instantiationService.createInstance(QueryResultsInput, uri.toString());
+				let queryInput: QueryInput = instantiationService.createInstance(QueryInput, input.getName(), '', input, queryResultsInput, undefined);
+				return queryInput;
+			}
 
-		//QueryPlanInput
-		uri = getQueryPlanEditorUri(input);
-		if(uri) {
-			let queryPlanXml: string = fs.readFileSync(uri.fsPath);
-			let queryPlanInput: QueryPlanInput = instantiationService.createInstance(QueryPlanInput, queryPlanXml, 'aaa', undefined);
-			return queryPlanInput;
-		}
+			//QueryPlanInput
+			uri = getQueryPlanEditorUri(input);
+			if(uri) {
+				let queryPlanXml: string = fs.readFileSync(uri.fsPath);
+				let queryPlanInput: QueryPlanInput = instantiationService.createInstance(QueryPlanInput, queryPlanXml, 'aaa', undefined);
+				return queryPlanInput;
+			}
+
+			return input;
+		});
+
 	}
 
-	return input;
+	return TPromise.as(input);
 }
 
 /**
@@ -88,9 +93,9 @@ const sqlPlanFileTypes = ['SQLPLAN'];
  * If input is a supported query editor file, return it's URI. Otherwise return undefined.
  * @param input The EditorInput to retrieve the URI of
  */
-function getQueryEditorFileUri(input: EditorInput): URI {
+function getQueryEditorFileUri(input: EditorInput, modeService: IModeService): TPromise<URI> {
 	if (!input || !input.getName()) {
-		return undefined;
+		return TPromise.as(undefined);
 	}
 
 	// If this editor is not already of type queryinput
@@ -100,16 +105,17 @@ function getQueryEditorFileUri(input: EditorInput): URI {
 		let uri: URI = getSupportedInputResource(input);
 		if (uri) {
 			let isValidUri: boolean = !!uri && !!uri.toString;
-
-			let isSqlMime = StaticServices.modeService.get().getModeId(mime.guessMimeTypes(input.getResource().path).join(',')) === 'sql';
-
-			if (isValidUri && (isSqlMime || hasSqlFileMode(input)) ) {
-				return uri;
+			if (!isValidUri) {
+				return TPromise.as(undefined);
 			}
+
+			return modeService.getOrCreateMode(undefined).then(() => {
+				return modeService.getModeId(mime.guessMimeTypes(input.getResource().path).join(',')) === 'sql' ? uri : undefined;
+			});
 		}
 	}
 
-	return undefined;
+	return TPromise.as(undefined);
 }
 
 /**
@@ -135,26 +141,12 @@ function getQueryPlanEditorUri(input: EditorInput): URI {
 }
 
 /**
- * Checks whether the given EditorInput is set to either undefined or sql mode
- * @param input The EditorInput to check the mode of
- */
-function hasSqlFileMode(input: EditorInput): boolean {
-	if (input instanceof UntitledEditorInput) {
-		let untitledCast: UntitledEditorInput = <UntitledEditorInput> input;
-		return untitledCast && (untitledCast.getModeId() === undefined || untitledCast.getModeId() === sqlModeId);
-	}
-
-	return false;
-}
-
-/**
  * Checks whether the name of the specified input has an extension that is
  * @param extensions The extensions to check for
  * @param input The input to check for the specified extensions
  */
 function hasFileExtension(extensions: string[], input: EditorInput, checkUntitledFileType: boolean): boolean {
 	// Check the extension type
-	let res = StaticServices.modeService.get().getModeId(mime.guessMimeTypes(input.getResource().path).join(','));
 	let lastPeriodIndex = input.getName().lastIndexOf('.');
 	if (lastPeriodIndex > -1) {
 		let extension: string = input.getName().substr(lastPeriodIndex + 1).toUpperCase();

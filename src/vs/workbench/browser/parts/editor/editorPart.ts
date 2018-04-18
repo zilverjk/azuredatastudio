@@ -52,6 +52,7 @@ import { isErrorWithActions } from 'vs/base/common/errors';
 
 // {{SQL CARBON EDIT}}
 import { convertEditorInput } from 'sql/parts/common/customInputConverter';
+import { IModeService } from 'vs/editor/common/services/modeService';
 
 class ProgressMonitor {
 
@@ -138,7 +139,8 @@ export class EditorPart extends Part implements IEditorPart, IEditorGroupService
 		@IContextKeyService contextKeyService: IContextKeyService,
 		@IInstantiationService private instantiationService: IInstantiationService,
 		@IThemeService themeService: IThemeService,
-		@IEnvironmentService private environmentService: IEnvironmentService
+		@IEnvironmentService private environmentService: IEnvironmentService,
+		@IModeService private modeService: IModeService
 	) {
 		super(id, { hasTitle: false }, themeService);
 
@@ -356,10 +358,11 @@ export class EditorPart extends Part implements IEditorPart, IEditorGroupService
 
 		// {{SQL CARBON EDIT}}
 		// Convert input into custom type if it's one of the ones we support
-		input = convertEditorInput(input, options, this.instantiationService);
+		return convertEditorInput(input, options, this.instantiationService, this.modeService).then(newInput => {
+			// Open through UI
+			return this.doOpenEditor(position, newInput, options, ratio);
+		});
 
-		// Open through UI
-		return this.doOpenEditor(position, input, options, ratio);
 	}
 
 	private doOpenEditor(position: Position, input: EditorInput, options: EditorOptions, ratio: number[]): TPromise<BaseEditor> {

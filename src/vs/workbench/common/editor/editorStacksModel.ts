@@ -697,7 +697,8 @@ export class EditorGroup implements IEditorGroup {
 				this.updateResourceMap(editor, false /* add */);
 
 				// {{SQL CARBON EDIT}}
-				return CustomInputConverter.convertEditorInput(editor, undefined, this.instantiationService);
+				return editor;
+				// return CustomInputConverter.convertEditorInput(editor, undefined, this.instantiationService);
 			}
 
 			return null;
