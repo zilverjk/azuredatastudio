@@ -203,6 +203,10 @@ export class ObjectExplorerService implements IObjectExplorerService {
 		this.sendUpdateNodeEvent(connection, errorMessage);
 	}
 
+	public onDidChangeTreeData(handle: number, nodeInfo: sqlops.ExpandNodeInfo) {
+		this.handleTreeDataChanged(nodeInfo);
+	}
+
 	private sendUpdateNodeEvent(connection: ConnectionProfile, errorMessage: string = undefined) {
 		let eventArgs: ObjectExplorerNodeEventArgs = {
 			connection: <IConnectionProfile>connection,
@@ -563,5 +567,18 @@ export class ObjectExplorerService implements IObjectExplorerService {
 			currentNode = nextNode;
 		}
 		return currentNode;
+	}
+
+	private async handleTreeDataChanged(nodeInfo: sqlops.ExpandNodeInfo): Promise<void> {
+		let sessionInfo = this._sessions[nodeInfo.sessionId];
+		if (!sessionInfo) {
+			return;
+		}
+
+		let treeNode = await this.getTreeNode(sessionInfo.connection.id, nodeInfo.nodePath);
+		if (treeNode && await treeNode.isExpanded()) {
+			let session = treeNode.getSession();
+			this.expandOrRefreshTreeNode(session, treeNode, true);
+		}
 	}
 }

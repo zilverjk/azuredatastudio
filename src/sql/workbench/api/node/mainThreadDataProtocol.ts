@@ -429,6 +429,10 @@ export class MainThreadDataProtocol implements MainThreadDataProtocolShape {
 		this._objectExplorerService.onNodeExpanded(handle, expandResponse);
 	}
 
+	public $onDidChangeTreeData(handle: number, nodeInfo: sqlops.ExpandNodeInfo): void {
+		this._objectExplorerService.onDidChangeTreeData(handle, nodeInfo);
+	}
+
 	//Tasks handlers
 	public $onTaskCreated(handle: number, taskInfo: sqlops.TaskInfo): void {
 		this._taskService.onNewTaskCreated(handle, taskInfo);

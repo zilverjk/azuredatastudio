@@ -1000,6 +1000,11 @@ declare module 'sqlops' {
 
 		registerOnExpandCompleted(handler: (response: ObjectExplorerExpandInfo) => any): void;
 
+		/**
+		 * An optional event to signal that an element or root has changed.
+		 * This will trigger the view to update the changed element/root and its children recursively (if shown).
+		 */
+		onDidChangeTreeData?: vscode.Event<ExpandNodeInfo>;
 	}
 
 	// Admin Services interfaces  -----------------------------------------------------------------------

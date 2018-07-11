@@ -128,6 +128,11 @@ export class ExtHostDataProtocol extends ExtHostDataProtocolShape {
 	$registerObjectExplorerProvider(provider: sqlops.ObjectExplorerProvider): vscode.Disposable {
 		let rt = this.registerProvider(provider, DataProviderType.ObjectExplorerProvider);
 		this._proxy.$registerObjectExplorerProvider(provider.providerId, provider.handle);
+		if (provider.onDidChangeTreeData) {
+			provider.onDidChangeTreeData(nodeInfo => {
+				this._proxy.$onDidChangeTreeData(provider.handle, nodeInfo);
+			});
+		}
 		return rt;
 	}
 

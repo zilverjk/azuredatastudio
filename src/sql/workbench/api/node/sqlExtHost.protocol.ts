@@ -448,6 +448,7 @@ export interface MainThreadDataProtocolShape extends IDisposable {
 	$onQueryMessage(handle: number, message: sqlops.QueryExecuteMessageParams): void;
 	$onObjectExplorerSessionCreated(handle: number, message: sqlops.ObjectExplorerSession): void;
 	$onObjectExplorerNodeExpanded(handle: number, message: sqlops.ObjectExplorerExpandInfo): void;
+	$onDidChangeTreeData(handle: number, nodeInfo: sqlops.ExpandNodeInfo): void;
 	$onTaskCreated(handle: number, sessionResponse: sqlops.TaskInfo): void;
 	$onTaskStatusChanged(handle: number, sessionResponse: sqlops.TaskProgressInfo): void;
 	$onFileBrowserOpened(handle: number, response: sqlops.FileBrowserOpenedParams): void;
