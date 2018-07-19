@@ -4,18 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
-	Component, Input, Inject, ChangeDetectorRef, forwardRef, ComponentFactoryResolver,
-	ViewChild, ViewChildren, ElementRef, Injector, OnDestroy, QueryList, AfterViewInit
+	Component, Input, Inject, ChangeDetectorRef, forwardRef,
+	ViewChild, ElementRef, OnDestroy, AfterViewInit
 } from '@angular/core';
 
 import * as sqlops from 'sqlops';
 
 import { ComponentBase } from 'sql/parts/modelComponents/componentBase';
 import { IComponent, IComponentDescriptor, IModelStore, ComponentEventType } from 'sql/parts/modelComponents/interfaces';
-
 import { InputBox } from 'sql/base/browser/ui/inputBox/inputBox';
+import { attachInputBoxStyler } from 'sql/common/theme/styler';
+
 import { IInputOptions, MessageType } from 'vs/base/browser/ui/inputbox/inputBox';
-import { attachInputBoxStyler, attachListStyler } from 'vs/platform/theme/common/styler';
 import { IWorkbenchThemeService } from 'vs/workbench/services/themes/common/workbenchThemeService';
 import { IContextViewService } from 'vs/platform/contextview/browser/contextView';
 import * as nls from 'vs/nls';
