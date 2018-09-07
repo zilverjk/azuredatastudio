@@ -14,7 +14,7 @@ import { fillInActions } from 'vs/platform/actions/browser/menuItemActionItem';
 
 import {
 	DisconnectConnectionAction, AddServerAction,
-	DeleteConnectionAction, RefreshAction, EditServerGroupAction
+	DeleteConnectionAction, RefreshAction, EditServerGroupAction, ConnectAllAction
 }
 	from 'sql/parts/objectExplorer/viewlet/connectionTreeAction';
 import {
@@ -150,7 +150,8 @@ export class ServerTreeActionProvider extends ContributableActionProvider {
 		return [
 			this._instantiationService.createInstance(AddServerAction, AddServerAction.ID, AddServerAction.LABEL),
 			this._instantiationService.createInstance(EditServerGroupAction, EditServerGroupAction.ID, EditServerGroupAction.LABEL, element),
-			this._instantiationService.createInstance(DeleteConnectionAction, DeleteConnectionAction.ID, DeleteConnectionAction.DELETE_CONNECTION_GROUP_LABEL, element)
+			this._instantiationService.createInstance(DeleteConnectionAction, DeleteConnectionAction.ID, DeleteConnectionAction.DELETE_CONNECTION_GROUP_LABEL, element),
+			this._instantiationService.createInstance(ConnectAllAction, ConnectAllAction.ID, ConnectAllAction.LABEL, element, tree)
 		];
 	}
 

@@ -22,6 +22,7 @@ import { TreeNode } from 'sql/parts/objectExplorer/common/treeNode';
 import Severity from 'vs/base/common/severity';
 import { ObjectExplorerActionsContext, ObjectExplorerActionUtilities } from 'sql/parts/objectExplorer/viewlet/objectExplorerActions';
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
+import { TreeUpdateUtils } from 'sql/parts/objectExplorer/viewlet/treeUpdateUtils';
 
 export class RefreshAction extends Action {
 
@@ -206,6 +207,30 @@ export class EditServerGroupAction extends Action {
 
 	public run(): TPromise<boolean> {
 		this._connectionManagementService.showEditServerGroupDialog(this._group);
+		return TPromise.as(true);
+	}
+}
+
+export class ConnectAllAction extends Action {
+	public static ID = 'registeredServers.connectAllInGroup';
+	public static LABEL = 'Connect all servers in group';
+
+	constructor(
+		id: string,
+		label: string,
+		private _group: ConnectionProfileGroup,
+		private _tree: ITree,
+		@IConnectionManagementService private _connectionManagementService: IConnectionManagementService,
+		@IObjectExplorerService private _objectExplorerService: IObjectExplorerService
+	) {
+		super(id, label);
+		this.class = 'connect-all-action';
+	}
+
+	public run(): TPromise<boolean> {
+		this._group.connections.forEach(connection => {
+			TreeUpdateUtils.connectAndCreateOeSession(connection, undefined, this._connectionManagementService, this._objectExplorerService, this._tree);
+		});
 		return TPromise.as(true);
 	}
 }
