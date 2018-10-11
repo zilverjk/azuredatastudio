@@ -9,6 +9,7 @@ import * as crypto from 'crypto';
 import * as os from 'os';
 import {workspace, WorkspaceConfiguration} from 'vscode';
 import * as findRemoveSync from 'find-remove';
+import URI from '../../../src/vs/base/common/uri';
 
 const configTracingLevel = 'tracingLevel';
 const configLogRetentionMinutes = 'logRetentionMinutes';
@@ -68,8 +69,8 @@ export function getConfigTracingLevel() : string {
 	}
 }
 
-export function getDefaultLogDir() : string {
-	return path.join(process.env['VSCODE_LOGS'], '..', '..','mssql');
+export function getDefaultLogDir() : URI {
+	return URI.file(path.join(process.env['VSCODE_LOGS'], '..', '..','mssql'));
 }
 
 export function getDefaultLogFile(prefix: string, pid: number) : string {
