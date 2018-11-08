@@ -17,7 +17,7 @@ import { CONTEXT_PROFILER_EDITOR, PROFILER_TABLE_COMMAND_SEARCH } from './interf
 import { SelectBox } from 'sql/base/browser/ui/selectBox/selectBox';
 import { textFormatter } from 'sql/parts/grid/services/sharedServices';
 import { ProfilerResourceEditor } from './profilerResourceEditor';
-import { IContextMenuService, IContextViewService } from 'vs/platform/contextview/browser/contextView';
+import { IContextViewService } from 'vs/platform/contextview/browser/contextView';
 import { ITextModel } from 'vs/editor/common/model';
 import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
 import { UntitledEditorInput } from 'vs/workbench/common/editor/untitledEditorInput';
@@ -35,7 +35,6 @@ import { CommonFindController, FindStartFocusAction } from 'vs/editor/contrib/fi
 import * as types from 'vs/base/common/types';
 import { attachSelectBoxStyler } from 'vs/platform/theme/common/styler';
 import { DARK, HIGH_CONTRAST } from 'vs/platform/theme/common/themeService';
-import { IEditorGroupsService } from 'vs/workbench/services/group/common/editorGroupsService';
 import { CancellationToken } from 'vs/base/common/cancellation';
 import { IStorageService } from 'vs/platform/storage/common/storage';
 import { IView, SplitView, Sizing } from 'vs/base/browser/ui/splitview/splitview';
@@ -152,13 +151,12 @@ export class ProfilerEditor extends BaseEditor {
 	constructor(
 		@ITelemetryService telemetryService: ITelemetryService,
 		@IWorkbenchThemeService themeService: IWorkbenchThemeService,
+		@IEditorService editorService: IEditorService,
 		@IInstantiationService private _instantiationService: IInstantiationService,
-		@IContextMenuService private _contextMenuService: IContextMenuService,
 		@IModelService private _modelService: IModelService,
 		@IProfilerService private _profilerService: IProfilerService,
 		@IContextKeyService private _contextKeyService: IContextKeyService,
 		@IContextViewService private _contextViewService: IContextViewService,
-		@IEditorService editorService: IEditorService,
 		@IStorageService storageService: IStorageService
 	) {
 		super(ProfilerEditor.ID, telemetryService, themeService, storageService);
@@ -209,7 +207,7 @@ export class ProfilerEditor extends BaseEditor {
 		this._header = document.createElement('div');
 		this._header.className = 'profiler-header';
 		this._container.appendChild(this._header);
-		this._actionBar = new Taskbar(this._header, this._contextMenuService);
+		this._actionBar = new Taskbar(this._header);
 		this._startAction = this._instantiationService.createInstance(Actions.ProfilerStart, Actions.ProfilerStart.ID, Actions.ProfilerStart.LABEL);
 		this._startAction.enabled = false;
 		this._createAction = this._instantiationService.createInstance(Actions.ProfilerCreate, Actions.ProfilerCreate.ID, Actions.ProfilerCreate.LABEL);

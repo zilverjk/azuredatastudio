@@ -6,10 +6,19 @@
 import 'vs/css!./jobHistory';
 import 'vs/css!sql/media/icons/common-icons';
 
+import { OnInit, Component, Inject, Input, forwardRef, ElementRef, ChangeDetectorRef, ViewChild, ChangeDetectionStrategy, Injectable } from '@angular/core';
 import * as azdata from 'azdata';
 import * as nls from 'vs/nls';
+
 import * as dom from 'vs/base/browser/dom';
-import { OnInit, Component, Inject, Input, forwardRef, ElementRef, ChangeDetectorRef, ViewChild, ChangeDetectionStrategy, Injectable } from '@angular/core';
+import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
+import { IWorkbenchThemeService } from 'vs/workbench/services/themes/common/workbenchThemeService';
+import { attachListStyler } from 'vs/platform/theme/common/styler';
+import { Tree } from 'vs/base/parts/tree/browser/treeImpl';
+import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
+import { ScrollbarVisibility } from 'vs/base/common/scrollable';
+import { IContextMenuService } from 'vs/platform/contextview/browser/contextView';
+
 import { Taskbar } from 'sql/base/browser/ui/taskbar/taskbar';
 import { AgentViewComponent } from 'sql/parts/jobManagement/agent/agentView.component';
 import { CommonServiceInterface } from 'sql/services/common/commonServiceInterface.service';
@@ -20,16 +29,9 @@ import { IJobManagementService } from 'sql/platform/jobManagement/common/interfa
 import { JobHistoryController, JobHistoryDataSource,
 	JobHistoryRenderer, JobHistoryFilter, JobHistoryModel, JobHistoryRow } from 'sql/parts/jobManagement/views/jobHistoryTree';
 import { JobStepsViewRow } from 'sql/parts/jobManagement/views/jobStepsViewTree';
-import { IWorkbenchThemeService } from 'vs/workbench/services/themes/common/workbenchThemeService';
-import { attachListStyler } from 'vs/platform/theme/common/styler';
-import { Tree } from 'vs/base/parts/tree/browser/treeImpl';
-import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
-import { ScrollbarVisibility } from 'vs/base/common/scrollable';
-import { IContextMenuService } from 'vs/platform/contextview/browser/contextView';
 import { JobManagementView } from 'sql/parts/jobManagement/views/jobManagementView';
 import { TabChild } from 'sql/base/browser/ui/panel/tab.component';
 import { IDashboardService } from 'sql/platform/dashboard/browser/dashboardService';
-import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import * as TelemetryKeys from 'sql/common/telemetryKeys';
 
@@ -75,11 +77,11 @@ export class JobHistoryComponent extends JobManagementView implements OnInit {
 		@Inject(forwardRef(() => AgentViewComponent)) private _agentViewComponent: AgentViewComponent,
 		@Inject(IWorkbenchThemeService) private themeService: IWorkbenchThemeService,
 		@Inject(IInstantiationService) private instantiationService: IInstantiationService,
-		@Inject(IContextMenuService) private contextMenuService: IContextMenuService,
 		@Inject(IJobManagementService) private _jobManagementService: IJobManagementService,
+		@Inject(ITelemetryService) private _telemetryService: ITelemetryService,
+		@Inject(IContextMenuService) contextMenuService: IContextMenuService,
 		@Inject(IKeybindingService) keybindingService: IKeybindingService,
-		@Inject(IDashboardService) dashboardService: IDashboardService,
-		@Inject(ITelemetryService) private _telemetryService: ITelemetryService
+		@Inject(IDashboardService) dashboardService: IDashboardService
 	) {
 		super(commonService, dashboardService, contextMenuService, keybindingService, instantiationService);
 		this._treeController = new JobHistoryController();
@@ -350,7 +352,7 @@ export class JobHistoryComponent extends JobManagementView implements OnInit {
 		let editJobAction = this.instantiationService.createInstance(EditJobAction);
 		let refreshAction = this.instantiationService.createInstance(JobsRefreshAction);
 		let taskbar = <HTMLElement>this.actionBarContainer.nativeElement;
-		this._actionBar = new Taskbar(taskbar, this.contextMenuService);
+		this._actionBar = new Taskbar(taskbar);
 		this._actionBar.context = { targetObject: this._agentJobInfo, ownerUri: this.ownerUri, jobHistoryComponent: this };
 		this._actionBar.setContent([
 			{ action: runJobAction },
