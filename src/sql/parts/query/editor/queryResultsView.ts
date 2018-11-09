@@ -20,6 +20,7 @@ import { IInstantiationService } from 'vs/platform/instantiation/common/instanti
 import * as DOM from 'vs/base/browser/dom';
 import { once, anyEvent } from 'vs/base/common/event';
 import { IDisposable, dispose, Disposable } from 'vs/base/common/lifecycle';
+import { QueryInput } from 'sql/parts/query/common/queryInput';
 
 class ResultsView extends Disposable implements IPanelView {
 	private panelViewlet: PanelViewlet;
@@ -218,11 +219,6 @@ export class QueryResultsView extends Disposable {
 				this._panelView.pushTab(this.qpTab);
 			}
 		}
-		if (this.input.state.visibleTabs.has(this.topOperationsTab.identifier)) {
-			if (!this._panelView.contains(this.topOperationsTab)) {
-				this._panelView.pushTab(this.topOperationsTab);
-			}
-		}
 		this.runnerDisposables.push(runner.onQueryEnd(() => {
 			if (runner.isQueryPlan) {
 				runner.planXml.then(e => {
@@ -235,25 +231,21 @@ export class QueryResultsView extends Disposable {
 		}
 	}
 
-	public set input(input: QueryResultsInput) {
-		this._input = input;
+	public setInput(input: QueryInput) {
+		this._input = input.results;
 		dispose(this.runnerDisposables);
 		this.runnerDisposables = [];
 		this.resultsTab.view.state = this.input.state;
 		this.qpTab.view.state = this.input.state.queryPlanState;
-		this.topOperationsTab.view.state = this.input.state.topOperationsState;
 		this.chartTab.view.state = this.input.state.chartState;
-
 		let info = this.queryModelService._getQueryInfo(input.uri);
 		if (info) {
 			this.setQueryRunner(info.queryRunner);
 		} else {
-			let disposeable = this.queryModelService.onRunQueryStart(c => {
-				if (c === input.uri) {
-					let info = this.queryModelService._getQueryInfo(input.uri);
-					this.setQueryRunner(info.queryRunner);
-					disposeable.dispose();
-				}
+			let disposeable = input.onQueryStart(() => {
+				let info = this.queryModelService._getQueryInfo(input.uri);
+				this.setQueryRunner(info.queryRunner);
+				disposeable.dispose();
 			});
 		}
 	}

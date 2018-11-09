@@ -17,7 +17,6 @@ import QueryRunner from 'sql/platform/query/common/queryRunner';
 import { SaveFormat } from 'sql/parts/grid/common/interfaces';
 import { Table } from 'sql/base/browser/ui/table/table';
 import { GridTableState } from 'sql/parts/query/editor/gridPanel';
-import { QueryEditor } from './queryEditor';
 import { CellSelectionModel } from 'sql/base/browser/ui/table/plugins/cellSelectionModel.plugin';
 import { MessagePanel } from 'sql/parts/query/editor/messagePanel';
 import { isWindows } from 'vs/base/common/platform';
@@ -213,8 +212,8 @@ export class ChartDataAction extends Action {
 
 	public run(context: IGridActionContext): TPromise<boolean> {
 		let activeEditor = this.editorService.activeControl;
-		if (activeEditor instanceof QueryEditor) {
-			activeEditor.resultsEditor.chart({ batchId: context.batchId, resultId: context.resultId });
+		if ((<any>activeEditor).chart) {
+			(<any>activeEditor).chart({ batchId: context.batchId, resultId: context.resultId });
 			return TPromise.as(true);
 		} else {
 			return TPromise.as(false);
@@ -234,8 +233,8 @@ export class ShowQueryPlanAction extends Action {
 
 	public run(xml: string): TPromise<boolean> {
 		let activeEditor = this.editorService.activeControl;
-		if (activeEditor instanceof QueryEditor) {
-			activeEditor.resultsEditor.showQueryPlan(xml);
+		if ((<any>activeEditor).showQueryPlan) {
+			(<any>activeEditor).showQueryPlan(xml);
 			return TPromise.as(true);
 		} else {
 			return TPromise.as(false);

@@ -13,6 +13,7 @@ import { ConnectionProfile } from 'sql/platform/connection/common/connectionProf
 import { IConnectionProfile } from 'sql/platform/connection/common/interfaces';
 import { ConnectionManagementInfo } from './connectionManagementInfo';
 import { IServerGroupDialogCallbacks } from 'sql/platform/serverGroup/common/serverGroupController';
+import { IRange } from 'vs/editor/common/core/range';
 
 export const VIEWLET_ID = 'workbench.view.connections';
 
@@ -292,7 +293,7 @@ export interface INewConnectionParams {
 	connectionType: ConnectionType;
 	input?: IConnectableInput;
 	runQueryOnCompletion?: RunQueryOnConnectionMode;
-	querySelection?: azdata.ISelectionData;
+	querySelection?: IRange;
 	showDashboard?: boolean;
 	providers?: string[];
 }

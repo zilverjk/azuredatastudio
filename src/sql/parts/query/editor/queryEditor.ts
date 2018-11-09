@@ -10,14 +10,11 @@ import { BaseEditor } from 'vs/workbench/browser/parts/editor/baseEditor';
 import { Orientation } from 'vs/base/browser/ui/sash/sash';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { IThemeService } from 'vs/platform/theme/common/themeService';
+import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { TextResourceEditor } from 'vs/workbench/browser/parts/editor/textResourceEditor';
 import { IContextKey, IContextKeyService } from 'vs/platform/contextkey/common/contextkey';
-import { ISelectionData } from 'azdata';
 import { IEditorGroup } from 'vs/workbench/services/group/common/editorGroupsService';
-import { IDisposable } from 'vs/base/common/lifecycle';
-import { IRange } from 'vs/editor/common/core/range';
 import { CancellationToken } from 'vs/base/common/cancellation';
-import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
 import { SplitView, Sizing } from 'vs/base/browser/ui/splitview/splitview';
 import { TPromise } from 'vs/base/common/winjs.base';
 import * as DOM from 'vs/base/browser/dom';
@@ -27,10 +24,10 @@ import { QueryInput } from 'sql/parts/query/common/queryInput';
 import { QueryResultsEditor } from 'sql/parts/query/editor/queryResultsEditor';
 import * as queryContext from 'sql/parts/query/common/queryContext';
 import { QueryEditorActionBar } from 'sql/parts/query/editor/queryEditorActionBar';
-import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
-import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
-import { IConnectionManagementService } from 'sql/platform/connection/common/connectionManagement';
+import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
+import { IDisposable, dispose } from 'vs/base/common/lifecycle';
 import { IStorageService } from 'vs/platform/storage/common/storage';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 
 /**
  * Editor that hosts 2 sub-editors: A TextResourceEditor for SQL file editing, and a QueryResultsEditor
@@ -50,10 +47,13 @@ export class QueryEditor extends BaseEditor {
 	private textEditorContainer: HTMLElement;
 
 	private taskbar: QueryEditorActionBar;
-
 	private splitview: SplitView;
 
+	private resultsVisible = false;
+
 	private queryEditorVisible: IContextKey<boolean>;
+
+	private inputDisposables: IDisposable[] = [];
 
 	constructor(
 		@ITelemetryService telemetryService: ITelemetryService,
@@ -61,36 +61,13 @@ export class QueryEditor extends BaseEditor {
 		@IContextKeyService contextKeyService: IContextKeyService,
 		@IStorageService storageService: IStorageService,
 		@IInstantiationService private instantiationService: IInstantiationService,
-		@IEditorService private editorService: IEditorService,
-		@IConnectionManagementService private connectionManagementService: IConnectionManagementService,
+		@IEditorService private editorService: IEditorService
 	) {
 		super(QueryEditor.ID, telemetryService, themeService, storageService);
 
 		if (contextKeyService) {
 			this.queryEditorVisible = queryContext.QueryEditorVisibleContext.bindTo(contextKeyService);
 		}
-	}
-
-	// PROPERTIES //////////////////////////////////////////////////////////
-	/**
-	 * Returns the URI of this editor if it is connected.
-	 * @returns {string} URI of the editor if connected, undefined otherwise
-	 */
-	public get connectedUri(): string {
-		return this.connectionManagementService.isConnected(this.uri)
-			? this.uri
-			: undefined;
-	}
-
-	/**
-	 * Returns the URI of this editor if an input is associated with it
-	 * @return {string} URI of this if input is associated, undefined otherwise
-	 */
-	get uri(): string {
-		let input: QueryInput = <QueryInput>this.input;
-		return input
-			? input.getQueryResultsInputResource()
-			: undefined;
 	}
 
 	protected createEditor(parent: HTMLElement): void {
@@ -111,6 +88,7 @@ export class QueryEditor extends BaseEditor {
 		this.textEditorContainer = DOM.$('.text-editor-container');
 		this.textEditor = this._register(this.instantiationService.createInstance(TextResourceEditor));
 		this.textEditor.create(this.textEditorContainer);
+		this.taskbar.editor = this.getControl() as ICodeEditor;
 
 		this.splitview.addView({
 			element: this.textEditorContainer,
@@ -150,7 +128,7 @@ export class QueryEditor extends BaseEditor {
 	 * Sets the input data for this editor.
 	 */
 	public setInput(newInput: QueryInput, options: EditorOptions, token: CancellationToken): Thenable<void> {
-		const oldInput = <QueryInput>this.input;
+		const oldInput = this.input;
 
 		if (newInput.matches(oldInput)) {
 			return TPromise.as(undefined);
@@ -163,8 +141,30 @@ export class QueryEditor extends BaseEditor {
 			super.setInput(newInput, options, token),
 			this.taskbar.setInput(newInput),
 			this.textEditor.setInput(newInput.sql, options, token),
-			this.resultsEditor.setInput(newInput.results, options)
-		]).then(() => undefined);
+			this.resultsEditor.setInput(newInput, options)
+		]).then(() => {
+			dispose(this.inputDisposables);
+			this.inputDisposables = [];
+			this.inputDisposables.push(this.input.onQueryStart(() => {
+				this.addResultsEditor();
+			}));
+		});
+	}
+
+	public chart(dataId: { batchId: number; resultId: number; }) {
+		this.resultsEditor.chart(dataId);
+	}
+
+	public showQueryPlan(xml: string) {
+		this.resultsEditor.showQueryPlan(xml);
+	}
+
+	public toggleResultsEditorVisibility() {
+		if (this.resultsVisible) {
+			this.removeResultsEditor();
+		} else {
+			this.addResultsEditor();
+		}
 	}
 
 	/**
@@ -231,124 +231,25 @@ export class QueryEditor extends BaseEditor {
 		return this.textEditor.getControl();
 	}
 
-	/**
-	 * Returns the underlying SQL editor's text selection in a 0-indexed format. Returns undefined if there
-	 * is no selected text.
-	 */
-	public getSelection(checkIfRange: boolean = true): ISelectionData {
-		if (this.textEditor.getControl()) {
-			let vscodeSelection = this.textEditor.getControl().getSelection();
-
-			// If the selection is a range of characters rather than just a cursor position, return the range
-			let isRange: boolean =
-				!(vscodeSelection.getStartPosition().lineNumber === vscodeSelection.getEndPosition().lineNumber &&
-					vscodeSelection.getStartPosition().column === vscodeSelection.getEndPosition().column);
-			if (!checkIfRange || isRange) {
-				let sqlToolsServiceSelection: ISelectionData = {
-					startLine: vscodeSelection.getStartPosition().lineNumber - 1,
-					startColumn: vscodeSelection.getStartPosition().column - 1,
-					endLine: vscodeSelection.getEndPosition().lineNumber - 1,
-					endColumn: vscodeSelection.getEndPosition().column - 1,
-				};
-				return sqlToolsServiceSelection;
-			}
-		}
-
-		// Otherwise return undefined because there is no selected text
-		return undefined;
-	}
-
-	public isSelectionEmpty(): boolean {
-		if (this.textEditor.getControl()) {
-			let control = this.textEditor.getControl();
-			let codeEditor: ICodeEditor = <ICodeEditor>control;
-
-			if (codeEditor) {
-				let value = codeEditor.getValue();
-				if (value !== undefined && value.length > 0) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	public getAllText(): string {
-		if (this.textEditor.getControl()) {
-			let control = this.textEditor.getControl();
-			let codeEditor: ICodeEditor = <ICodeEditor>control;
-			if (codeEditor) {
-				let value = codeEditor.getValue();
-				if (value !== undefined && value.length > 0) {
-					return value;
-				} else {
-					return '';
-				}
-			}
-		}
-		return undefined;
-	}
-
-	public getAllSelection(): ISelectionData {
-		if (this.textEditor.getControl()) {
-			let control = this.textEditor.getControl();
-			let codeEditor: ICodeEditor = <ICodeEditor>control;
-			if (codeEditor) {
-				let model = codeEditor.getModel();
-				let totalLines = model.getLineCount();
-				let endColumn = model.getLineMaxColumn(totalLines);
-				let selection: ISelectionData = {
-					startLine: 0,
-					startColumn: 0,
-					endLine: totalLines - 1,
-					endColumn: endColumn - 1,
-				};
-				return selection;
-			}
-		}
-		return undefined;
-	}
-
-	public getSelectionText(): string {
-		if (this.textEditor.getControl()) {
-			let control = this.textEditor.getControl();
-			let codeEditor: ICodeEditor = <ICodeEditor>control;
-			let vscodeSelection = control.getSelection();
-
-			if (codeEditor && vscodeSelection) {
-				let model = codeEditor.getModel();
-				let value = model.getValueInRange(vscodeSelection);
-				if (value !== undefined && value.length > 0) {
-					return value;
-				}
-			}
-		}
-		return '';
-	}
-
-	public rebuildIntelliSenseCache(): void {
-		this.connectionManagementService.rebuildIntelliSenseCache(this.connectedUri);
-	}
-
 	public setOptions(options: EditorOptions): void {
 		this.textEditor.setOptions(options);
 	}
 
-	// PRIVATE METHODS ////////////////////////////////////////////////////////////
+	private removeResultsEditor() {
+		this.splitview.removeView(1, Sizing.Distribute);
+		this.resultsVisible = false;
+	}
 
-	/**
-	 * Sets the text selection for the SQL editor based on the given ISelectionData.
-	 */
-	private _setSelection(selection: ISelectionData): void {
-		let rangeConversion: IRange = {
-			startLineNumber: selection.startLine + 1,
-			startColumn: selection.startColumn + 1,
-			endLineNumber: selection.endLine + 1,
-			endColumn: selection.endColumn + 1
-		};
-		let editor = this.textEditor.getControl();
-		editor.revealRange(rangeConversion);
-		editor.setSelection(rangeConversion);
-		editor.focus();
+	private addResultsEditor() {
+		if (!this.resultsVisible) {
+			this.splitview.addView({
+				element: this.resultsEditorContainer,
+				layout: size => this.resultsEditor && this.resultsEditor.layout(new DOM.Dimension(this.dimension.width, size)),
+				minimumSize: 220,
+				maximumSize: Number.POSITIVE_INFINITY,
+				onDidChange: Event.None
+			}, Sizing.Distribute);
+			this.resultsVisible = true;
+		}
 	}
 }
