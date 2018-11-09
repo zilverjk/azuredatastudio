@@ -145,8 +145,14 @@ export class QueryEditor extends BaseEditor {
 			this.inputDisposables.push(this.input.state.onChange(c => {
 				if (c.executingChange && this.input.state.executing) {
 					this.addResultsEditor();
+					this.input.state.resultsVisible = true;
 				}
 			}));
+			if (this.input.state.resultsVisible) {
+				this.addResultsEditor();
+			} else {
+				this.removeResultsEditor();
+			}
 		});
 	}
 
@@ -235,8 +241,10 @@ export class QueryEditor extends BaseEditor {
 	}
 
 	private removeResultsEditor() {
-		this.splitview.removeView(1, Sizing.Distribute);
-		this.resultsVisible = false;
+		 if (this.resultsVisible) {
+			this.splitview.removeView(1, Sizing.Distribute);
+			this.resultsVisible = false;
+		 }
 	}
 
 	private addResultsEditor() {
