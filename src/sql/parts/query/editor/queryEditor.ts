@@ -241,10 +241,10 @@ export class QueryEditor extends BaseEditor {
 	}
 
 	private removeResultsEditor() {
-		 if (this.resultsVisible) {
+		if (this.resultsVisible) {
 			this.splitview.removeView(1, Sizing.Distribute);
 			this.resultsVisible = false;
-		 }
+		}
 	}
 
 	private addResultsEditor() {
