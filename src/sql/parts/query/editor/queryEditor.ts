@@ -19,15 +19,16 @@ import { SplitView, Sizing } from 'vs/base/browser/ui/splitview/splitview';
 import { TPromise } from 'vs/base/common/winjs.base';
 import * as DOM from 'vs/base/browser/dom';
 import { Event } from 'vs/base/common/event';
+import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
+import { IDisposable, dispose } from 'vs/base/common/lifecycle';
+import { IStorageService } from 'vs/platform/storage/common/storage';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 
 import { QueryInput } from 'sql/parts/query/common/queryInput';
 import { QueryResultsEditor } from 'sql/parts/query/editor/queryResultsEditor';
 import * as queryContext from 'sql/parts/query/common/queryContext';
 import { QueryEditorActionBar } from 'sql/parts/query/editor/queryEditorActionBar';
-import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
-import { IDisposable, dispose } from 'vs/base/common/lifecycle';
-import { IStorageService } from 'vs/platform/storage/common/storage';
-import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
+import { QueryEditorContext } from 'sql/parts/query/editor/queryEditorContext';
 
 /**
  * Editor that hosts 2 sub-editors: A TextResourceEditor for SQL file editing, and a QueryResultsEditor
@@ -49,6 +50,8 @@ export class QueryEditor extends BaseEditor {
 	private taskbar: QueryEditorActionBar;
 	private splitview: SplitView;
 
+	private contextKey: QueryEditorContext;
+
 	private resultsVisible = false;
 
 	private queryEditorVisible: IContextKey<boolean>;
@@ -64,6 +67,8 @@ export class QueryEditor extends BaseEditor {
 		@IEditorService private editorService: IEditorService
 	) {
 		super(QueryEditor.ID, telemetryService, themeService, storageService);
+
+		this.contextKey = new QueryEditorContext(contextKeyService);
 
 		if (contextKeyService) {
 			this.queryEditorVisible = queryContext.QueryEditorVisibleContext.bindTo(contextKeyService);
@@ -142,6 +147,7 @@ export class QueryEditor extends BaseEditor {
 		]).then(() => {
 			dispose(this.inputDisposables);
 			this.inputDisposables = [];
+			this.contextKey.setState(this.input.state);
 			this.inputDisposables.push(this.input.state.onChange(c => {
 				if (c.executingChange && this.input.state.executing) {
 					this.addResultsEditor();
