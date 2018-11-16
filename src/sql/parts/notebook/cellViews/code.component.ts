@@ -230,7 +230,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		let runCellAction = this._instantiationService.createInstance(RunCellAction, context);
 
 		let taskbar = <HTMLElement>this.toolbarElement.nativeElement;
-		this._actionBar = new Taskbar(taskbar, this.contextMenuService);
+		this._actionBar = new Taskbar(taskbar);
 		this._actionBar.context = context;
 		this._actionBar.setContent([
 			{ action: runCellAction }

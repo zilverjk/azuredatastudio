@@ -370,7 +370,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 		let saveNotebookButton = this.instantiationService.createInstance(SaveNotebookAction, 'notebook.SaveNotebook', localize('save', 'Save'), 'notebook-button icon-save');
 
 		let taskbar = <HTMLElement>this.toolbar.nativeElement;
-		this._actionBar = new Taskbar(taskbar, this.contextMenuService, { actionItemProvider: action => this.actionItemProvider(action as Action) });
+		this._actionBar = new Taskbar(taskbar, { actionItemProvider: action => this.actionItemProvider(action as Action) });
 		this._actionBar.context = this;
 		this._actionBar.setContent([
 			{ element: kernelContainer },
