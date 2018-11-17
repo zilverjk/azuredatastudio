@@ -8,8 +8,10 @@
 import { Dimension } from 'vs/base/browser/dom';
 import { Disposable } from 'vs/base/common/lifecycle';
 import { Event, Emitter } from 'vs/base/common/event';
-import { IHorizontalSashLayoutProvider, IVerticalSashLayoutProvider,
-	ISashEvent, Orientation, Sash } from 'vs/base/browser/ui/sash/sash';
+import {
+	IHorizontalSashLayoutProvider, IVerticalSashLayoutProvider,
+	ISashEvent, Orientation, Sash
+} from 'vs/base/browser/ui/sash/sash';
 // There is no need to import the sash CSS - 'vs/base/browser/ui/sash/sash' already includes it
 
 /**
