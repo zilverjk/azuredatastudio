@@ -6,7 +6,6 @@
 'use strict';
 
 import * as GridContentEvents from 'sql/parts/grid/common/gridContentEvents';
-import * as LocalizedConstants from 'sql/parts/query/common/localizedConstants';
 import QueryRunner, { EventType as QREvents } from 'sql/parts/query/execution/queryRunner';
 import { DataService } from 'sql/parts/grid/services/dataService';
 import { IQueryModelService } from 'sql/parts/query/execution/queryModel';
@@ -295,7 +294,7 @@ export class QueryModelService implements IQueryModelService {
 		});
 		queryRunner.addListener(QREvents.BATCH_START, b => {
 			let link = undefined;
-			let messageText = LocalizedConstants.runQueryBatchStartMessage;
+			let messageText = '';
 			if (b.selection) {
 				if (info.selectionSnippet) {
 					// This indicates it's a query string. Do not include line information since it'll be inaccurate, but show some of the
@@ -303,7 +302,7 @@ export class QueryModelService implements IQueryModelService {
 					messageText = nls.localize('runQueryStringBatchStartMessage', 'Started executing query "{0}"', info.selectionSnippet);
 				} else {
 					link = {
-						text: strings.format(LocalizedConstants.runQueryBatchStartLine, b.selection.startLine + 1)
+						text: nls.localize('runQueryBatchStartLine', 'Line {0}', b.selection.startLine + 1)
 					};
 				}
 			}
@@ -360,7 +359,7 @@ export class QueryModelService implements IQueryModelService {
 			// can be correct
 			this._notificationService.notify({
 				severity: Severity.Error,
-				message: strings.format(LocalizedConstants.msgCancelQueryFailed, error)
+				message: nls.localize('msgCancelQueryFailed', 'Canceling the query failed: {0}', error)
 			});
 			this._fireQueryEvent(queryRunner.uri, 'complete', 0);
 		});
@@ -406,7 +405,7 @@ export class QueryModelService implements IQueryModelService {
 			});
 			queryRunner.addListener(QREvents.BATCH_START, batch => {
 				let link = undefined;
-				let messageText = LocalizedConstants.runQueryBatchStartMessage;
+				let messageText = '';
 				if (batch.selection) {
 					if (info.selectionSnippet) {
 						// This indicates it's a query string. Do not include line information since it'll be inaccurate, but show some of the
@@ -414,7 +413,7 @@ export class QueryModelService implements IQueryModelService {
 						messageText = nls.localize('runQueryStringBatchStartMessage', 'Started executing query "{0}"', info.selectionSnippet);
 					} else {
 						link = {
-							text: strings.format(LocalizedConstants.runQueryBatchStartLine, batch.selection.startLine + 1)
+							text: nls.localize('runQueryBatchStartLine', 'Line {0}', batch.selection.startLine + 1)
 						};
 					}
 				}

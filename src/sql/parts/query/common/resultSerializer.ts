@@ -5,7 +5,6 @@
 
 import * as ConnectionConstants from 'sql/parts/connection/common/constants';
 import * as Constants from 'sql/parts/query/common/constants';
-import * as LocalizedConstants from 'sql/parts/query/common/localizedConstants';
 import * as WorkbenchUtils from 'sql/workbench/common/sqlWorkbenchUtils';
 import { SaveResultsRequestParams } from 'sqlops';
 import { IQueryManagementService } from 'sql/parts/query/common/queryManagement';
@@ -296,7 +295,7 @@ export class ResultSerializer {
 
 		this._notificationService.prompt(
 			Severity.Info,
-			LocalizedConstants.msgSaveSucceeded + savedFilePath,
+			nls.localize('msgSaveSucceeded', 'Successfully saved results to {0}', savedFilePath),
 			[{
 				label: nls.localize('openLocation', "Open file location"),
 				run: () => {
@@ -321,19 +320,19 @@ export class ResultSerializer {
 	private sendRequestToService(filePath: string, batchIndex: number, resultSetNo: number, format: string, selection: Slick.Range): Thenable<void> {
 		let saveResultsParams = this.getParameters(filePath, batchIndex, resultSetNo, format, selection);
 
-		this.logToOutputChannel(LocalizedConstants.msgSaveStarted + this._filePath);
+		this.logToOutputChannel(nls.localize('msgSaveStarted', 'Started saving results to {0}', this._filePath));
 
 		// send message to the sqlserverclient for converting results to the requested format and saving to filepath
 		return this._queryManagementService.saveResults(saveResultsParams).then(result => {
 			if (result.messages) {
 				this._notificationService.notify({
 					severity: Severity.Error,
-					message: LocalizedConstants.msgSaveFailed + result.messages
+					message: nls.localize('msgSaveFailed', 'Failed to save results. {0}', result.messages)
 				});
-				this.logToOutputChannel(LocalizedConstants.msgSaveFailed + result.messages);
+				this.logToOutputChannel(nls.localize('msgSaveFailed', 'Failed to save results. {0}', result.messages));
 			} else {
 				this.promptFileSavedNotification(this._filePath);
-				this.logToOutputChannel(LocalizedConstants.msgSaveSucceeded + filePath);
+				this.logToOutputChannel(nls.localize('msgSaveSucceeded', 'Successfully saved results to {0}', filePath));
 				this.openSavedFile(this._filePath, format);
 			}
 			// TODO telemetry for save results
@@ -342,9 +341,9 @@ export class ResultSerializer {
 		}, error => {
 			this._notificationService.notify({
 				severity: Severity.Error,
-				message: LocalizedConstants.msgSaveFailed + error
+				message: nls.localize('msgSaveFailed', 'Failed to save results. {0}', error)
 			});
-			this.logToOutputChannel(LocalizedConstants.msgSaveFailed + error);
+			this.logToOutputChannel(nls.localize('msgSaveFailed', 'Failed to save results. {0}', error));
 		});
 	}
 

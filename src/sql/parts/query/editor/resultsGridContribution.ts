@@ -8,9 +8,7 @@ import { Extensions, IConfigurationRegistry, IConfigurationNode, ConfigurationSc
 import { Registry } from 'vs/platform/registry/common/platform';
 import * as nls from 'vs/nls';
 import * as editorOptions from 'vs/editor/common/config/editorOptions';
-import EDITOR_DEFAULTS = editorOptions.EDITOR_DEFAULTS;
 import EDITOR_FONT_DEFAULTS = editorOptions.EDITOR_FONT_DEFAULTS;
-import EDITOR_MODEL_DEFAULTS = editorOptions.EDITOR_MODEL_DEFAULTS;
 
 import { RESULTS_GRID_DEFAULTS } from 'sql/parts/query/editor/queryResultsEditor';
 

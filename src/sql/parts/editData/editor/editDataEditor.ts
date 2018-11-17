@@ -35,7 +35,7 @@ import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
 import { IContextKey, IContextKeyService } from 'vs/platform/contextkey/common/contextkey';
 import { UntitledEditorInput } from 'vs/workbench/common/editor/untitledEditorInput';
 import { IEditorGroup } from 'vs/workbench/services/group/common/editorGroupsService';
-import { IFlexibleSash, HorizontalFlexibleSash } from 'sql/parts/query/views/flexibleSash';
+import { IFlexibleSash, HorizontalFlexibleSash } from './views/flexibleSash';
 import { EditDataResultsEditor } from 'sql/parts/editData/editor/editDataResultsEditor';
 import { EditDataResultsInput } from 'sql/parts/editData/common/editDataResultsInput';
 import { CancellationToken } from 'vs/base/common/cancellation';

@@ -13,9 +13,9 @@ import { QueryEditorState } from 'sql/parts/query/common/queryInput';
 export class QueryEditorContext extends Disposable {
 	private _isConnected: IContextKey<boolean>;
 	private _isExecuting: IContextKey<boolean>;
+	private _resultsVisible: IContextKey<boolean>;
 
 	private state: QueryEditorState;
-
 	private stateDisposable: IDisposable;
 
 	constructor(contextKeyService: IContextKeyService) {
@@ -23,6 +23,7 @@ export class QueryEditorContext extends Disposable {
 
 		this._isConnected = QueryEditorContextKeys.isConnected.bindTo(contextKeyService);
 		this._isExecuting = QueryEditorContextKeys.isExecuting.bindTo(contextKeyService);
+		this._resultsVisible = QueryEditorContextKeys.resultsVisible.bindTo(contextKeyService);
 	}
 
 	public setState(state: QueryEditorState) {
@@ -38,10 +39,12 @@ export class QueryEditorContext extends Disposable {
 	reset() {
 		this._isConnected.reset();
 		this._isExecuting.reset();
+		this._resultsVisible.reset();
 	}
 
 	private _update() {
 		this._isConnected.set(this.state.connected);
 		this._isExecuting.set(this.state.executing);
+		this._resultsVisible.set(this.state.resultsVisible);
 	}
 }

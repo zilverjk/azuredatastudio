@@ -8,28 +8,15 @@ import 'vs/css!sql/media/overwriteVsIcons';
 import { Registry } from 'vs/platform/registry/common/platform';
 import { EditorDescriptor, IEditorRegistry, Extensions as EditorExtensions } from 'vs/workbench/browser/editor';
 import { SyncDescriptor } from 'vs/platform/instantiation/common/descriptors';
-import { IWorkbenchActionRegistry, Extensions } from 'vs/workbench/common/actions';
 import { IConfigurationRegistry, Extensions as ConfigExtensions } from 'vs/platform/configuration/common/configurationRegistry';
-import { SyncActionDescriptor } from 'vs/platform/actions/common/actions';
-import { KeyMod, KeyCode, KeyChord } from 'vs/base/common/keyCodes';
-import { KeybindingsRegistry, KeybindingWeight } from 'vs/platform/keybinding/common/keybindingsRegistry';
-import { ContextKeyExpr } from 'vs/platform/contextkey/common/contextkey';
-import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { localize } from 'vs/nls';
 
 import { QueryEditor } from 'sql/parts/query/editor/queryEditor';
 import { QueryResultsEditor } from 'sql/parts/query/editor/queryResultsEditor';
 import { QueryResultsInput } from 'sql/parts/query/common/queryResultsInput';
-import * as queryContext from 'sql/parts/query/common/queryContext';
 import { QueryInput } from 'sql/parts/query/common/queryInput';
 import { EditDataEditor } from 'sql/parts/editData/editor/editDataEditor';
 import { EditDataInput } from 'sql/parts/editData/common/editDataInput';
-import {
-	RunQueryKeyboardAction, RunCurrentQueryKeyboardAction, RefreshIntellisenseKeyboardAction, ToggleQueryResultsKeyboardAction,
-	RunQueryShortcutAction, RunCurrentQueryWithActualPlanKeyboardAction, FocusOnCurrentQueryKeyboardAction, ParseSyntaxAction, CancelQueryKeyboardAction
-} from 'sql/parts/query/execution/keyboardQueryActions';
-import * as gridActions from 'sql/parts/grid/views/gridActions';
-import * as gridCommands from 'sql/parts/grid/views/gridCommands';
 import { QueryPlanEditor } from 'sql/parts/queryPlan/queryPlanEditor';
 import { QueryPlanInput } from 'sql/parts/queryPlan/queryPlanInput';
 import * as Constants from 'sql/parts/query/common/constants';
@@ -88,187 +75,6 @@ const editDataResultsEditorDescriptor = new EditorDescriptor(
 
 Registry.as<IEditorRegistry>(EditorExtensions.Editors)
 	.registerEditor(editDataResultsEditorDescriptor, [new SyncDescriptor(EditDataResultsInput)]);
-
-/*
-let actionRegistry = <IWorkbenchActionRegistry>Registry.as(Extensions.WorkbenchActions);
-
-// Query Actions
-actionRegistry.registerWorkbenchAction(
-	new SyncActionDescriptor(
-		RunQueryKeyboardAction,
-		RunQueryKeyboardAction.ID,
-		RunQueryKeyboardAction.LABEL,
-		{ primary: KeyCode.F5 }
-	),
-	RunQueryKeyboardAction.LABEL
-);
-
-actionRegistry.registerWorkbenchAction(
-	new SyncActionDescriptor(
-		RunCurrentQueryKeyboardAction,
-		RunCurrentQueryKeyboardAction.ID,
-		RunCurrentQueryKeyboardAction.LABEL,
-		{ primary: KeyMod.CtrlCmd | KeyCode.F5 }
-	),
-	RunCurrentQueryKeyboardAction.LABEL
-);
-
-actionRegistry.registerWorkbenchAction(
-	new SyncActionDescriptor(
-		RunCurrentQueryWithActualPlanKeyboardAction,
-		RunCurrentQueryWithActualPlanKeyboardAction.ID,
-		RunCurrentQueryWithActualPlanKeyboardAction.LABEL,
-		{ primary: KeyMod.CtrlCmd | KeyCode.KEY_M }
-	),
-	RunCurrentQueryWithActualPlanKeyboardAction.LABEL
-);
-
-actionRegistry.registerWorkbenchAction(
-	new SyncActionDescriptor(
-		CancelQueryKeyboardAction,
-		CancelQueryKeyboardAction.ID,
-		CancelQueryKeyboardAction.LABEL,
-		{ primary: KeyMod.Alt | KeyCode.PauseBreak }
-	),
-	CancelQueryKeyboardAction.LABEL
-);
-
-actionRegistry.registerWorkbenchAction(
-	new SyncActionDescriptor(
-		RefreshIntellisenseKeyboardAction,
-		RefreshIntellisenseKeyboardAction.ID,
-		RefreshIntellisenseKeyboardAction.LABEL
-	),
-	RefreshIntellisenseKeyboardAction.LABEL
-);
-
-actionRegistry.registerWorkbenchAction(
-	new SyncActionDescriptor(
-		FocusOnCurrentQueryKeyboardAction,
-		FocusOnCurrentQueryKeyboardAction.ID,
-		FocusOnCurrentQueryKeyboardAction.LABEL,
-		{ primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KEY_O }
-	),
-	FocusOnCurrentQueryKeyboardAction.LABEL
-);
-
-actionRegistry.registerWorkbenchAction(
-	new SyncActionDescriptor(
-		ParseSyntaxAction,
-		ParseSyntaxAction.ID,
-		ParseSyntaxAction.LABEL
-	),
-	ParseSyntaxAction.LABEL
-);
-
-// Grid actions
-actionRegistry.registerWorkbenchAction(
-	new SyncActionDescriptor(
-		ToggleQueryResultsKeyboardAction,
-		ToggleQueryResultsKeyboardAction.ID,
-		ToggleQueryResultsKeyboardAction.LABEL,
-		{ primary: KeyMod.WinCtrl | KeyMod.Shift | KeyCode.KEY_R },
-		QueryEditorVisibleCondition
-	),
-	ToggleQueryResultsKeyboardAction.LABEL
-);
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.GRID_COPY_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsGridFocusCondition,
-	primary: KeyMod.CtrlCmd | KeyCode.KEY_C,
-	handler: gridCommands.copySelection
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.MESSAGES_SELECTALL_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsMessagesFocusCondition,
-	primary: KeyMod.CtrlCmd | KeyCode.KEY_A,
-	handler: gridCommands.selectAllMessages
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.GRID_SELECTALL_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsGridFocusCondition,
-	primary: KeyMod.CtrlCmd | KeyCode.KEY_A,
-	handler: gridCommands.selectAll
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.MESSAGES_COPY_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsMessagesFocusCondition,
-	primary: KeyMod.CtrlCmd | KeyCode.KEY_C,
-	handler: gridCommands.copyMessagesSelection
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.GRID_SAVECSV_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsGridFocusCondition,
-	primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KEY_R, KeyMod.CtrlCmd | KeyCode.KEY_C),
-	handler: gridCommands.saveAsCsv
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.GRID_SAVEJSON_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsGridFocusCondition,
-	primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KEY_R, KeyMod.CtrlCmd | KeyCode.KEY_J),
-	handler: gridCommands.saveAsJson
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.GRID_SAVEEXCEL_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsGridFocusCondition,
-	primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KEY_R, KeyMod.CtrlCmd | KeyCode.KEY_E),
-	handler: gridCommands.saveAsExcel
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.GRID_VIEWASCHART_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsGridFocusCondition,
-	primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KEY_R, KeyMod.CtrlCmd | KeyCode.KEY_V),
-	handler: gridCommands.viewAsChart
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.GRID_GOTONEXTGRID_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: ResultsGridFocusCondition,
-	primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KEY_R, KeyMod.CtrlCmd | KeyCode.KEY_N),
-	handler: gridCommands.goToNextGrid
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.TOGGLERESULTS_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: QueryEditorVisibleCondition,
-	primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KEY_R,
-	handler: gridCommands.toggleResultsPane
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.TOGGLEMESSAGES_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: QueryEditorVisibleCondition,
-	primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KEY_Y,
-	handler: gridCommands.toggleMessagePane
-});
-
-KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: gridActions.GOTONEXTQUERYOUTPUTTAB_ID,
-	weight: KeybindingWeight.EditorContrib,
-	when: QueryEditorVisibleCondition,
-	primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KEY_P,
-	handler: gridCommands.goToNextQueryOutputTab
-});
-*/
 
 // Intellisense and other configuration options
 let registryProperties = {
@@ -364,39 +170,6 @@ let registryProperties = {
 		'description': localize('mssql.intelliSense.lowerCaseSuggestions', 'Should IntelliSense suggestions be lowercase')
 	}
 };
-/*DisconnectAction
-// Setup keybindings
-let initialShortcuts = [
-	{ name: 'sp_help', primary: KeyMod.Alt + KeyCode.F2 },
-	// Note: using Ctrl+Shift+N since Ctrl+N is used for "open editor at index" by default. This means it's different from SSMS
-	{ name: 'sp_who', primary: KeyMod.WinCtrl + KeyMod.Shift + KeyCode.KEY_1 },
-	{ name: 'sp_lock', primary: KeyMod.WinCtrl + KeyMod.Shift + KeyCode.KEY_2 }
-];
-
-for (let i = 0; i < 9; i++) {
-	const queryIndex = i + 1;
-	let settingKey = `sql.query.shortcut${queryIndex}`;
-	let defaultVal = i < initialShortcuts.length ? initialShortcuts[i].name : '';
-	let defaultPrimary = i < initialShortcuts.length ? initialShortcuts[i].primary : null;
-
-	KeybindingsRegistry.registerCommandAndKeybindingRule({
-		id: `workbench.action.query.shortcut${queryIndex}`,
-		weight: KeybindingWeight.WorkbenchContrib,
-		when: QueryEditorVisibleCondition,
-		primary: defaultPrimary,
-		handler: accessor => {
-			accessor.get(IInstantiationService).createInstance(RunQueryShortcutAction).run(queryIndex);
-		}
-	});
-	registryProperties[settingKey] = {
-		'type': 'string',
-		'default': defaultVal,
-		'description': localize('queryShortcutDescription',
-			'Set keybinding workbench.action.query.shortcut{0} to run the shortcut text as a procedure call. Any selected text in the query editor will be passed as a parameter',
-			queryIndex)
-	};
-}
-*/
 
 // Register the query-related configuration options
 let configurationRegistry = <IConfigurationRegistry>Registry.as(ConfigExtensions.Configuration);

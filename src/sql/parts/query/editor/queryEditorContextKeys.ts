@@ -9,4 +9,5 @@ import { RawContextKey } from 'vs/platform/contextkey/common/contextkey';
 export namespace QueryEditorContextKeys {
 	export const isConnected = new RawContextKey<boolean>('isConnected', false);
 	export const isExecuting = new RawContextKey<boolean>('isExecuting', false);
+	export const resultsVisible = new RawContextKey<boolean>('resultsVisible', false);
 }
