@@ -65,7 +65,7 @@ export class MessagePanelState {
 	public scrollPosition: number;
 	public collapsed = false;
 
-	constructor(@IConfigurationService configurationService: IConfigurationService) {
+	constructor( @IConfigurationService configurationService: IConfigurationService) {
 		let messagesOpenedSettings = configurationService.getValue<boolean>('sql.messagesDefaultOpen');
 		if (!isUndefinedOrNull(messagesOpenedSettings)) {
 			this.collapsed = !messagesOpenedSettings;
@@ -343,7 +343,7 @@ export class MessageController extends WorkbenchTreeController {
 				endColumn: selection.endColumn + 1,
 				endLineNumber: selection.endLine + 1,
 				startColumn: selection.startColumn + 1,
-				startLineNumber: selection.startLine +1
+				startLineNumber: selection.startLine + 1
 			};
 			control.setSelection(range);
 			control.revealRange(range);
