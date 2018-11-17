@@ -23,7 +23,6 @@ import { Event } from 'vs/base/common/event';
 
 import { QueryInput } from 'sql/parts/query/common/queryInput';
 import { QueryResultsEditor } from 'sql/parts/query/editor/queryResultsEditor';
-import * as queryContext from 'sql/parts/query/common/queryContext';
 import { QueryEditorActionBar } from 'sql/parts/query/editor/queryEditorActionBar';
 import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
 import { IDisposable, dispose } from 'vs/base/common/lifecycle';
@@ -67,10 +66,6 @@ export class QueryEditor extends BaseEditor {
 		super(QueryEditor.ID, telemetryService, themeService);
 
 		this.contextKey = new QueryEditorContext(contextKeyService);
-
-		if (contextKeyService) {
-			this.queryEditorVisible = queryContext.QueryEditorVisibleContext.bindTo(contextKeyService);
-		}
 	}
 
 	protected createEditor(parent: HTMLElement): void {

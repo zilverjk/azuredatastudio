@@ -20,7 +20,7 @@ import { IInstantiationService } from 'vs/platform/instantiation/common/instanti
 import { EditDataInput } from 'sql/parts/editData/common/editDataInput';
 
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
-import * as queryContext from 'sql/parts/query/common/queryContext';
+import * as queryContext from './views/queryContext';
 import { Taskbar, ITaskbarContent } from 'sql/base/browser/ui/taskbar/taskbar';
 import { IContextMenuService } from 'vs/platform/contextview/browser/contextView';
 import { IActionItem } from 'vs/base/browser/ui/actionbar/actionbar';

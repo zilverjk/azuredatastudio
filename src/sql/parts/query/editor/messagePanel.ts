@@ -7,7 +7,6 @@
 import 'vs/css!./media/messagePanel';
 import { IMessagesActionContext, SelectAllMessagesAction, CopyMessagesAction } from './actions';
 import QueryRunner from 'sql/parts/query/execution/queryRunner';
-import { QueryInput } from 'sql/parts/query/common/queryInput';
 
 import { IResultMessage, ISelectionData } from 'sqlops';
 
@@ -30,7 +29,6 @@ import { isArray, isUndefinedOrNull } from 'vs/base/common/types';
 import { IDisposable, dispose } from 'vs/base/common/lifecycle';
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 import { ScrollbarVisibility } from 'vs/base/common/scrollable';
-import { QueryEditor } from 'sql/parts/query/editor/queryEditor';
 import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
 import { IRange } from 'vs/editor/common/core/range';
 
