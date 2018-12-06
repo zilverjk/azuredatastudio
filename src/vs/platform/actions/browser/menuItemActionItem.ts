@@ -17,8 +17,9 @@ import { IContextMenuService } from 'vs/platform/contextview/browser/contextView
 import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
 import { INotificationService } from 'vs/platform/notification/common/notification';
 
+// {{SQL CARBON EDIT}}
 // The alternative key on all platforms is alt. On windows we also support shift as an alternative key #44136
-class AlternativeKeyEmitter extends Emitter<boolean> {
+export class AlternativeKeyEmitter extends Emitter<boolean> {
 
 	private _subscriptions: IDisposable[] = [];
 	private _isPressed: boolean;
