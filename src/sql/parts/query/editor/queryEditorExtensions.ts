@@ -11,10 +11,13 @@ import { TPromise } from 'vs/base/common/winjs.base';
 import { MenuRegistry, MenuId } from 'vs/platform/actions/common/actions';
 import { ContextKeyExpr } from 'vs/platform/contextkey/common/contextkey';
 import URI from 'vs/base/common/uri';
+import { deepClone } from 'vs/base/common/objects';
 
 export interface IQueryEditorCommandMenuOptions extends IEditorCommandMenuOptions {
 	iconDark?: string;
 	iconLight?: string;
+	taskBarOnly?: boolean;
+	menuOnly?: boolean;
 }
 
 export interface IQueryActionOptions extends IActionOptions {
@@ -27,12 +30,19 @@ export interface IQueryActionOptions extends IActionOptions {
  */
 export abstract class QueryEditorAction extends EditorAction {
 
-	constructor(private opts: IQueryActionOptions) {
+	private opts: IQueryActionOptions;
+
+	constructor(opts: IQueryActionOptions) {
+		let thisOpts = deepClone(opts);
+		if (opts.menuOpts && opts.menuOpts.taskBarOnly) {
+			delete opts.menuOpts;
+		}
 		super(opts);
+		this.opts = thisOpts;
 	}
 
 	public register(): void {
-		if (this.opts.menuOpts && (this.opts.menuOpts.iconDark || this.opts.menuOpts.iconLight)) {
+		if (this.opts.menuOpts && !this.opts.menuOpts.menuOnly) {
 			MenuRegistry.appendMenuItem(MenuId.EditorActionBar, {
 				command: {
 					id: this.id,

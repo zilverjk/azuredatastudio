@@ -173,7 +173,8 @@ export class ActualQueryPlanAction extends QueryEditorAction {
 			},
 			menuOpts: {
 				group: 'query',
-				order: 1.1
+				order: 1.1,
+				menuOnly: true
 			}
 		});
 	}
@@ -289,7 +290,8 @@ export class RefreshIntellisenseKeyboardAction extends QueryEditorAction {
 			precondition: EditorContextKeys.languageId.isEqualTo('sql'),
 			menuOpts: {
 				group: 'query',
-				order: 1.1
+				order: 1.1,
+				menuOnly: true
 			}
 		});
 	}
@@ -317,6 +319,7 @@ export class ListDatabasesAction extends QueryEditorAction {
 			menuOpts: {
 				group: 'query',
 				order: 1.1,
+				taskBarOnly: true
 			}
 		});
 	}
@@ -559,4 +562,5 @@ registerEditorAction(ActualQueryPlanAction);
 registerEditorAction(DisconnectAction);
 registerEditorAction(ConnectAction);
 registerEditorAction(ChangeConnectionAction);
+registerEditorAction(ListDatabasesAction);
 registerEditorAction(RefreshIntellisenseKeyboardAction);
