@@ -10,7 +10,7 @@ import { TPromise } from 'vs/base/common/winjs.base';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
 import { IDisposable, dispose, Disposable } from 'vs/base/common/lifecycle';
-import { MenuId, IMenuService } from 'vs/platform/actions/common/actions';
+import { MenuId, IMenuService, MenuItemAction } from 'vs/platform/actions/common/actions';
 import { IContextKeyService } from 'vs/platform/contextkey/common/contextkey';
 import { ActionsOrientation } from 'vs/base/browser/ui/actionbar/actionbar';
 import { fillInActionBarActions } from 'vs/platform/actions/browser/menuItemActionItem';
@@ -85,7 +85,6 @@ export class QueryEditorActionBar extends Disposable {
 		})));
 		const actions = new Array<IAction>();
 		fillInActionBarActions(menuBar, {}, actions);
-		actions.push(new queryActions.ListDatabasesAction());
 		this.toolbar.setActions(prepareActions(actions))();
 	}
 
