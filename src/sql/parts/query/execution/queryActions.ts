@@ -24,6 +24,7 @@ import { KeyMod, KeyCode } from 'vs/base/common/keyCodes';
 import { KeybindingWeight } from 'vs/platform/keybinding/common/keybindingsRegistry';
 import { registerEditorAction } from 'vs/editor/browser/editorExtensions';
 import { ContextKeyExpr } from 'vs/platform/contextkey/common/contextkey';
+import { EditorContextKeys } from 'vs/editor/common/editorContextKeys';
 
 import { Dropdown } from 'sql/base/browser/ui/editableDropdown/dropdown';
 import { attachEditableDropdownStyler } from 'sql/common/theme/styler';
@@ -38,7 +39,7 @@ import { SelectBox } from 'sql/base/browser/ui/selectBox/selectBox';
 import { QueryInput } from 'sql/parts/query/common/queryInput';
 import { QueryEditorAction } from 'sql/parts/query/editor/queryEditorExtensions';
 import { QueryEditorContextKeys } from 'sql/parts/query/editor/queryEditorContextKeys';
-import { EditorContextKeys } from 'vs/editor/common/editorContextKeys';
+import { IQueryManagementService } from 'sql/parts/query/common/queryManagement';
 
 export interface IQueryActionContext {
 	input: QueryInput;
@@ -300,6 +301,52 @@ export class RefreshIntellisenseKeyboardAction extends QueryEditorAction {
 		const cms = accessor.get(IConnectionManagementService);
 		const input = accessor.get(IEditorService).activeEditor as QueryInput;
 		return TPromise.wrap(cms.rebuildIntelliSenseCache(input.uri));
+	}
+}
+
+
+/**
+ * Action class that parses the query string in the current SQL text document.
+ */
+export class ParseSyntaxAction extends QueryEditorAction {
+
+	public static ID = 'parseQueryAction';
+
+	constructor() {
+		super({
+			id: ParseSyntaxAction.ID,
+			label: nls.localize('parseQuery', 'Parse Query'),
+			alias: 'Parse Query',
+			precondition: ContextKeyExpr.and(QueryEditorContextKeys.isConnected, EditorContextKeys.languageId.isEqualTo('sql')),
+			menuOpts: {
+				group: 'query',
+				order: 1.1,
+				menuOnly: true
+			}
+		});
+	}
+
+	public run(accessor: ServicesAccessor, editor: ICodeEditor): TPromise<void> {
+		const qms = accessor.get(IQueryManagementService);
+		const input = accessor.get(IEditorService).activeEditor as QueryInput;
+		const ns = accessor.get(INotificationService);
+		let text = editor.getModel().getValueInRange(editor.getSelection());
+		if (text === '') {
+			text = editor.getValue();
+		}
+		qms.parseSyntax(input.uri, text).then(result => {
+			if (result && result.parseable) {
+				ns.notify({
+					severity: Severity.Info,
+					message: nls.localize('queryActions.parseSyntaxSuccess', 'Parse Successful')
+				});
+			} else if (result && result.errors.length > 0) {
+				let errorMessage = nls.localize('queryActions.parseSyntaxFailure', 'Parse failed: ');
+				ns.error(`${errorMessage}${result.errors[0]}`);
+			}
+		});
+
+		return TPromise.as(null);
 	}
 }
 
