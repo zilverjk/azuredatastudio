@@ -21,7 +21,6 @@ import { IQueryModelService } from 'sql/parts/query/execution/queryModel';
 import * as WorkbenchUtils from 'sql/workbench/common/sqlWorkbenchUtils';
 import * as Constants from 'sql/parts/query/common/constants';
 import * as ConnectionConstants from 'sql/parts/connection/common/constants';
-import { QueryInput } from 'sql/parts/query/common/queryInput';
 
 const singleQuote = '\'';
 
@@ -231,68 +230,5 @@ export class RunQueryShortcutAction extends Action {
 	private getDatabaseName(editor: QueryEditor): string {
 		let info = this._connectionManagementService.getConnectionInfo(editor.input.uri);
 		return info.connectionProfile.databaseName;
-	}
-}
-
-/**
- * Action class that parses the query string in the current SQL text document.
- */
-export class ParseSyntaxAction extends Action {
-
-	public static ID = 'parseQueryAction';
-	public static LABEL = nls.localize('parseSyntaxLabel', 'Parse Query');
-
-	constructor(
-		id: string,
-		label: string,
-		@IConnectionManagementService private _connectionManagementService: IConnectionManagementService,
-		@IQueryManagementService private _queryManagementService: IQueryManagementService,
-		@IEditorService private _editorService: IEditorService,
-		@INotificationService private _notificationService: INotificationService
-	) {
-		super(id, label);
-		this.enabled = true;
-	}
-
-	public run(): TPromise<void> {
-		let editor = this._editorService.activeControl;
-		if (editor instanceof QueryEditor) {
-			if (this.isConnected(editor)) {
-				let control = editor.getControl() as ICodeEditor;
-				let text = control.getModel().getValueInRange(control.getSelection());
-				if (text === '') {
-					text = control.getValue();
-				}
-				this._queryManagementService.parseSyntax(editor.input.uri, text).then(result => {
-					if (result && result.parseable) {
-						this._notificationService.notify({
-							severity: Severity.Info,
-							message: nls.localize('queryActions.parseSyntaxSuccess', 'Commands completed successfully')
-						});
-					} else if (result && result.errors.length > 0) {
-						let errorMessage = nls.localize('queryActions.parseSyntaxFailure', 'Command failed: ');
-						this._notificationService.error(`${errorMessage}${result.errors[0]}`);
-					}
-				});
-			} else {
-				this._notificationService.notify({
-					severity: Severity.Error,
-					message: nls.localize('queryActions.notConnected', 'Please connect to a server')
-				});
-			}
-		}
-
-		return TPromise.as(null);
-	}
-
-	/**
-	 * Returns the URI of the given editor if it is not undefined and is connected.
-	 * Public for testing only.
-	 */
-	private isConnected(editor: QueryEditor): boolean {
-		if (!editor || !editor.input) {
-			return false;
-		}
-		return this._connectionManagementService.isConnected(editor.input.uri);
 	}
 }
