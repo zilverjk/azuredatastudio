@@ -82,17 +82,6 @@ Registry.as<IEditorRegistry>(EditorExtensions.Editors)
 	.registerEditor(editDataResultsEditorDescriptor, [new SyncDescriptor(EditDataResultsInput)]);
 
 /*
-actionRegistry.registerWorkbenchAction(
-new SyncActionDescriptor(
-	ParseSyntaxAction,
-	ParseSyntaxAction.ID,
-	ParseSyntaxAction.LABEL
-),
-ParseSyntaxAction.LABEL
-);
-*/
-
-/*
 // Grid actions
 actionRegistry.registerWorkbenchAction(
 	new SyncActionDescriptor(
