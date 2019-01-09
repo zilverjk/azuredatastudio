@@ -432,17 +432,18 @@ export function createApiFactory(
 					return extHostNotebookDocumentsAndEditors.getAllEditors();
 				},
 				get onDidOpenNotebookDocument() {
-					return extHostNotebook.onDidOpenNotebookDocument;
+					return extHostNotebookDocumentsAndEditors.onDidOpenNotebookDocument;
 				},
 				get onDidChangeNotebookCell() {
-					return extHostNotebook.onDidChangeNotebookCell;
+					return extHostNotebookDocumentsAndEditors.onDidChangeNotebookCell;
 				},
 				showNotebookDocument(uri: vscode.Uri, showOptions: sqlops.nb.NotebookShowOptions) {
 					return extHostNotebookDocumentsAndEditors.showNotebookDocument(uri, showOptions);
 				},
 				registerNotebookProvider(provider: sqlops.nb.NotebookProvider): vscode.Disposable {
 					return extHostNotebook.registerNotebookProvider(provider);
-				}
+				},
+				CellRange: sqlExtHostTypes.CellRange
 			};
 
 			return {

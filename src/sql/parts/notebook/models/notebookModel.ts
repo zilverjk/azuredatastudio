@@ -12,7 +12,7 @@ import { Event, Emitter } from 'vs/base/common/event';
 import { Disposable } from 'vs/base/common/lifecycle';
 
 import { CellModel } from './cell';
-import { IClientSession, INotebookModel, IDefaultConnection, INotebookModelOptions, ICellModel, notebookConstants } from './modelInterfaces';
+import { IClientSession, INotebookModel, IDefaultConnection, INotebookModelOptions, ICellModel, notebookConstants, NotebookContentChange } from './modelInterfaces';
 import { NotebookChangeType, CellTypes, CellType } from 'sql/parts/notebook/models/contracts';
 import { nbversion } from '../notebookConstants';
 import * as notebookUtils from '../notebookUtils';
@@ -22,6 +22,8 @@ import { IConnectionProfile } from 'sql/parts/connection/common/interfaces';
 import { NotebookConnection } from 'sql/parts/notebook/models/notebookConnection';
 import { INotification, Severity } from 'vs/platform/notification/common/notification';
 import { Schemas } from 'vs/base/common/network';
+import URI from 'vs/base/common/uri';
+import { ISingleNotebookEditOperation } from 'sql/workbench/api/common/sqlExtHostTypes';
 
 /*
 * Used to control whether a message in a dialog/wizard is displayed as an error,
@@ -36,28 +38,6 @@ export enum MessageLevel {
 export class ErrorInfo {
 	constructor(public readonly message: string, public readonly severity: MessageLevel) {
 	}
-}
-export interface NotebookContentChange {
-	/**
-	 * What was the change that occurred?
-	 */
-	changeType: NotebookChangeType;
-	/**
-	 * Optional cells that were changed
-	 */
-	cells?: ICellModel | ICellModel[];
-	/**
-	 * Optional index of the change, indicating the cell at which an insert or
-	 * delete occurred
-	 */
-	cellIndex?: number;
-	/**
-	 * Optional value indicating if the notebook is in a dirty or clean state after this change
-	 *
-	 * @type {boolean}
-	 * @memberof NotebookContentChange
-	 */
-	isDirty?: boolean;
 }
 
 export class NotebookModel extends Disposable implements INotebookModel {
@@ -94,6 +74,13 @@ export class NotebookModel extends Disposable implements INotebookModel {
 
 	public get notebookManager(): INotebookManager {
 		return this.notebookOptions.notebookManager;
+	}
+
+	public get notebookUri() : URI {
+		return this.notebookOptions.notebookUri;
+	}
+	public set notebookUri(value : URI) {
+		this.notebookOptions.notebookUri = value;
 	}
 
 	public get hasServerManager(): boolean {
@@ -216,9 +203,9 @@ export class NotebookModel extends Disposable implements INotebookModel {
 		return this._cells.findIndex((cell) => cell.equals(cellModel));
 	}
 
-	public addCell(cellType: CellType, index?: number): void {
+	public addCell(cellType: CellType, index?: number): ICellModel {
 		if (this.inErrorState || !this._cells) {
-			return;
+			return null;
 		}
 		let cell = this.createCell(cellType);
 
@@ -228,12 +215,18 @@ export class NotebookModel extends Disposable implements INotebookModel {
 			this._cells.push(cell);
 			index = undefined;
 		}
+		// Set newly created cell as active cell
+		this._activeCell.active = false;
+		this._activeCell = cell;
+		this._activeCell.active = true;
 
 		this._contentChangedEmitter.fire({
 			changeType: NotebookChangeType.CellsAdded,
 			cells: [cell],
 			cellIndex: index
 		});
+
+		return cell;
 	}
 
 	private createCell(cellType: CellType): ICellModel {
@@ -260,6 +253,25 @@ export class NotebookModel extends Disposable implements INotebookModel {
 			});
 		} else {
 			this.notifyError(localize('deleteCellFailed', 'Failed to delete cell.'));
+		}
+	}
+
+	pushEditOperations(edits: ISingleNotebookEditOperation[]): void {
+		if (this.inErrorState || !this._cells) {
+			return;
+		}
+
+		for (let edit of edits) {
+			let newCells: ICellModel[] = [];
+			if (edit.cell) {
+				// TODO: should we validate and complete required missing parameters?
+				let contents: nb.ICellContents = edit.cell as nb.ICellContents;
+				newCells.push(this.notebookOptions.factory.createCell(contents, { notebook: this, isTrusted: this._trustedMode }));
+			}
+			this._cells.splice(edit.range.start, edit.range.end - edit.range.start, ...newCells);
+			this._contentChangedEmitter.fire({
+				changeType: NotebookChangeType.CellsAdded
+			});
 		}
 	}
 

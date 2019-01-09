@@ -15,6 +15,8 @@ import { RenderMimeRegistry } from 'sql/parts/notebook/outputs/registry';
 import { ModelFactory } from 'sql/parts/notebook/models/modelFactory';
 import { IConnectionProfile } from 'sql/parts/connection/common/interfaces';
 import { NotebookInput } from 'sql/parts/notebook/notebookInput';
+import { ISingleNotebookEditOperation } from 'sql/workbench/api/common/sqlExtHostTypes';
+import { ICellModel, INotebookModel } from 'sql/parts/notebook/models/modelInterfaces';
 
 export const SERVICE_ID = 'notebookService';
 export const INotebookService = createDecorator<INotebookService>(SERVICE_ID);
@@ -25,9 +27,12 @@ export const DEFAULT_NOTEBOOK_FILETYPE = 'IPYNB';
 export interface INotebookService {
 	_serviceBrand: any;
 
-	onNotebookEditorAdd: Event<INotebookEditor>;
-	onNotebookEditorRemove: Event<INotebookEditor>;
+	readonly onNotebookEditorAdd: Event<INotebookEditor>;
+	readonly onNotebookEditorRemove: Event<INotebookEditor>;
+	onNotebookEditorRename: Event<INotebookEditor>;
 
+	readonly isRegistrationComplete: boolean;
+	readonly registrationComplete: Promise<void>;
 	/**
 	 * Register a metadata provider
 	 */
@@ -37,6 +42,10 @@ export interface INotebookService {
 	 * Register a metadata provider
 	 */
 	unregisterProvider(providerId: string): void;
+
+	getSupportedFileExtensions(): string[];
+
+	getProviderForFileType(fileType: string): string;
 
 	/**
 	 * Initializes and returns a Notebook manager that can handle all important calls to open, display, and
@@ -56,6 +65,8 @@ export interface INotebookService {
 	shutdown(): void;
 
 	getMimeRegistry(): RenderMimeRegistry;
+
+	renameNotebookEditor(oldUri: URI, newUri: URI, currentEditor: INotebookEditor): void;
 }
 
 export interface INotebookProvider {
@@ -83,8 +94,11 @@ export interface INotebookParams extends IBootstrapParams {
 export interface INotebookEditor {
 	readonly notebookParams: INotebookParams;
 	readonly id: string;
+	readonly cells?: ICellModel[];
+	readonly modelReady: Promise<INotebookModel>;
 	isDirty(): boolean;
 	isActive(): boolean;
 	isVisible(): boolean;
 	save(): Promise<boolean>;
+	executeEdits(edits: ISingleNotebookEditOperation[]): boolean;
 }
