@@ -147,6 +147,7 @@ export class MessagePanel extends ViewletPanel {
 		this.reset();
 		this.queryRunnerDisposables.push(runner.onQueryStart(() => this.reset()));
 		this.queryRunnerDisposables.push(runner.onMessage(e => this.onMessage(e)));
+		this.onMessage(runner.messages);
 	}
 
 	private onMessage(message: IResultMessage | IResultMessage[]) {
