@@ -1,0 +1,36 @@
+{
+    "name": "dummy",
+    "displayName": "dummy",
+    "description": "A sample extension",
+    "version": "0.0.1",
+    "publisher": "Microsoft",
+    "engines": {
+        "vscode": "*",
+        "sqlops": "*"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:extension.sayHello",
+        "onCommand:extension.showCurrentConnection"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.sayHello",
+                "title": "Hello World"
+            },
+            {
+                "command": "extension.showCurrentConnection",
+                "title": "Show Current Connection"
+            }
+        ]
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "tslint": "^5.8.0",
+		"@types/node": "8.0.33"
+    }
+}
