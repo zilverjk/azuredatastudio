@@ -236,7 +236,7 @@ export class QueryEditor extends BaseEditor {
 	 */
 	public layout(dimension: DOM.Dimension): void {
 		this.dimension = dimension;
-		this.splitview.layout(dimension.height);
+		this.splitview.layout(dimension.height - 31);
 	}
 
 	/**
