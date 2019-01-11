@@ -24,6 +24,7 @@ import { CellModel } from 'sql/parts/notebook/models/cell';
 export class CellToggleMoreActions {
 	private _actions: Action[] = [];
 	private _moreActions: ActionBar;
+	private _showIcon: boolean;
 	constructor(
 		@IInstantiationService private instantiationService: IInstantiationService) {
 		this._actions.push(
@@ -39,6 +40,7 @@ export class CellToggleMoreActions {
 	public toggle(showIcon: boolean, elementRef: ElementRef, model: NotebookModel, cellModel: ICellModel) {
 		let context = new CellContext(model,cellModel);
 		let moreActionsElement = <HTMLElement>elementRef.nativeElement;
+		this._showIcon = showIcon;
 		if (showIcon) {
 			if (moreActionsElement.childNodes.length > 0) {
 				moreActionsElement.removeChild(moreActionsElement.childNodes[0]);
@@ -50,6 +52,10 @@ export class CellToggleMoreActions {
 		else if (moreActionsElement.childNodes.length > 0) {
 			moreActionsElement.removeChild(moreActionsElement.childNodes[0]);
 		}
+	}
+
+	public get shown(): boolean {
+		return this._showIcon;
 	}
 }
 
