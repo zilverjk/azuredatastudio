@@ -298,7 +298,7 @@ export class NotebookModel extends Disposable implements INotebookModel {
 			cells: [cell],
 			cellIndex: index
 		});
-
+		this.notebookOptions.connectionService.connect(this._activeConnection, cell.cellUri.toString());
 		return cell;
 	}
 
@@ -464,6 +464,9 @@ export class NotebookModel extends Disposable implements INotebookModel {
 				result => {
 					//Remove 'Select connection' from 'Attach to' drop-down since its a valid connection
 					this._onValidConnectionSelected.fire(true);
+					this.cells.forEach(cell => {
+						this.notebookOptions.connectionService.connect(newConnectionProfile, cell.cellUri.toString());
+					});
 				},
 				error => {
 					if (error) {
