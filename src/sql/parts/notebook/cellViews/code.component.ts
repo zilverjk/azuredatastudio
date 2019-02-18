@@ -152,6 +152,10 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		return this._activeCellId;
 	}
 
+	get cellType(): string {
+		return this._cellModel.cellType;
+	}
+
 	private createEditor(): void {
 		let instantiationService = this._instantiationService.createChild(new ServiceCollection([IProgressService, new SimpleProgressService()]));
 		this._editor = instantiationService.createInstance(QueryTextEditor);
@@ -232,9 +236,9 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		let toolbarEl = <HTMLElement>this.toolbarElement.nativeElement;
 		toolbarEl.style.borderRightColor = theme.getColor(themeColors.SIDE_BAR_BACKGROUND, true).toString();
 
-		let moreActionsEl = <HTMLElement>this.moreActionsElementRef.nativeElement;
-		moreActionsEl.style.borderRightColor = theme.getColor(themeColors.SIDE_BAR_BACKGROUND, true).toString();
-	}
+			let moreActionsEl = <HTMLElement>this.moreActionsElementRef.nativeElement;
+			moreActionsEl.style.borderRightColor = theme.getColor(themeColors.SIDE_BAR_BACKGROUND, true).toString();
+		}
 
 	private setFocusAndScroll(): void {
 		if (this.cellModel.id === this._activeCellId) {

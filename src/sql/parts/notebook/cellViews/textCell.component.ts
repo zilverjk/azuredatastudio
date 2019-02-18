@@ -30,7 +30,6 @@ export const TEXT_SELECTOR: string = 'text-cell-component';
 })
 export class TextCellComponent extends CellView implements OnInit, OnChanges {
 	@ViewChild('preview', { read: ElementRef }) private output: ElementRef;
-	@ViewChild('moreactions', { read: ElementRef }) private moreActionsElementRef: ElementRef;
 	@Input() cellModel: ICellModel;
 
 	@Input() set model(value: NotebookModel) {
@@ -99,7 +98,6 @@ export class TextCellComponent extends CellView implements OnInit, OnChanges {
 		this.setLoading(false);
 		this._register(this.themeService.onDidColorThemeChange(this.updateTheme, this));
 		this.updateTheme(this.themeService.getColorTheme());
-		this._cellToggleMoreActions.onInit(this.moreActionsElementRef, this.model, this.cellModel);
 		this.setFocusAndScroll();
 		this._register(this.cellModel.onOutputsChanged(e => {
 			this.updatePreview();
@@ -129,15 +127,15 @@ export class TextCellComponent extends CellView implements OnInit, OnChanges {
 	private updatePreview() {
 		if (this._content !== this.cellModel.source || this.cellModel.source.length === 0) {
 			if (!this.cellModel.source && !this.isEditMode) {
-				(<HTMLElement>this.output.nativeElement).innerHTML = localize('doubleClickEdit', 'Double-click to edit');
+				this._content = localize('doubleClickEdit', 'Double-click to edit');
 			} else {
 				this._content = this.sanitizeContent(this.cellModel.source);
-				// todo: pass in the notebook filename instead of undefined value
-				this._commandService.executeCommand<string>('notebook.showPreview', undefined, this._content).then((htmlcontent) => {
-					let outputElement = <HTMLElement>this.output.nativeElement;
-					outputElement.innerHTML = htmlcontent;
-				});
 			}
+			// todo: pass in the notebook filename instead of undefined value
+			this._commandService.executeCommand<string>('notebook.showPreview', undefined, this._content).then((htmlcontent) => {
+				let outputElement = <HTMLElement>this.output.nativeElement;
+				outputElement.innerHTML = htmlcontent;
+			});
 		}
 	}
 
@@ -156,18 +154,20 @@ export class TextCellComponent extends CellView implements OnInit, OnChanges {
 
 	private updateTheme(theme: IColorTheme): void {
 		let outputElement = <HTMLElement>this.output.nativeElement;
-		outputElement.style.borderTopColor = theme.getColor(themeColors.SIDE_BAR_BACKGROUND, true).toString();
-
-		let moreActionsEl = <HTMLElement>this.moreActionsElementRef.nativeElement;
-		moreActionsEl.style.borderRightColor = theme.getColor(themeColors.SIDE_BAR_BACKGROUND, true).toString();
+		outputElement.style.borderLeftColor = theme.getColor(themeColors.SIDE_BAR_BACKGROUND, true).toString();
+		outputElement.style.borderLeftWidth = '1px';
 	}
 
 	public handleContentChanged(): void {
 		this.updatePreview();
 	}
 
-	public toggleEditMode(editMode?: boolean): void {
-		this.isEditMode = editMode !== undefined? editMode : !this.isEditMode;
+	public toggleEditMode(editMode?: boolean, event?: Event): void {
+		if (event) {
+			this.isEditMode = true;
+		} else {
+			this.isEditMode = editMode !== undefined? editMode : !this.isEditMode;
+		}
 		this.updateMoreActions();
 		this.updatePreview();
 		this._changeRef.detectChanges();

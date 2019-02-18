@@ -11,4 +11,13 @@ text-cell-component .notebook-preview {
 	user-select: initial;
 	padding-left: 8px;
 	padding-right: 8px;
+	flex: 1 1 auto;
+}
+
+text-cell-component .notebook-text {
+	flex: 0 0 50%;
+}
+
+.notebookEditor .notebook-cell.active text-cell-component code-component {
+	border-width: 0px;
 }
