@@ -53,7 +53,7 @@ export class NotebookEditor extends BaseEditor {
 	 */
 	public layout(dimension: DOM.Dimension): void {
 		if (this.notebookInput) {
-			this.notebookInput.doChangeLayout();
+			// this.notebookInput.doChangeLayout();
 		}
 	}
 
@@ -66,6 +66,8 @@ export class NotebookEditor extends BaseEditor {
 
 		super.setInput(input, options, CancellationToken.None);
 
+		input.resolve();
+
 		$(parentElement).clearChildren();
 
 		if (!input.hasBootstrapped) {
@@ -76,7 +78,7 @@ export class NotebookEditor extends BaseEditor {
 			return TPromise.wrap<void>(this.bootstrapAngular(input));
 		} else {
 			this._notebookContainer = DOM.append(parentElement, input.container);
-			input.doChangeLayout();
+			// input.doChangeLayout();
 			return TPromise.wrap<void>(null);
 		}
 	}
@@ -88,12 +90,12 @@ export class NotebookEditor extends BaseEditor {
 		// Get the bootstrap params and perform the bootstrap
 		input.hasBootstrapped = true;
 		let params: INotebookParams = {
-			notebookUri: input.notebookUri,
+			notebookUri: input.getResource(),
 			input: input,
-			providerId: input.providerId ? input.providerId : DEFAULT_NOTEBOOK_PROVIDER,
-			providers: input.providers ? input.providers : [DEFAULT_NOTEBOOK_PROVIDER],
-			isTrusted: input.isTrusted,
-			connectionProfileId: input.connectionProfileId
+			providerId: undefined, //input.providerId ? input.providerId : DEFAULT_NOTEBOOK_PROVIDER,
+			providers: undefined, //input.providers ? input.providers : [DEFAULT_NOTEBOOK_PROVIDER],
+			isTrusted: undefined, //input.isTrusted,
+			connectionProfileId: undefined //input.connectionProfileId
 		};
 		bootstrapAngular(this.instantiationService,
 			NotebookModule,
@@ -104,4 +106,3 @@ export class NotebookEditor extends BaseEditor {
 		);
 	}
 }
-
