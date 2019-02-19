@@ -1,0 +1,16 @@
+<!--
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the Source EULA. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+-->
+<div style="display: flex; flex-flow: column; border-radius: 4px 0px 0px 4px; height: 100%">
+	<div class="new-cell-component" style="height: 100%">
+		<div class="new-cell-component text">
+			<section style="width: 220px; text-align: center; height: 100%">
+				<button class="new-cell-component button buttonLeft" (click)="addCell('code', $event)" (mouseenter)="changeBackground(true, $event)" (mouseleave)="changeBackground(false, $event)">{{addCode}}</button>
+				<button class="new-cell-component button buttonRight" (click)="addCell('markdown', $event)" (mouseenter)="changeBackground(true, $event)" (mouseleave)="changeBackground(false, $event)">{{addText}}</button>
+			</section>
+		</div>
+	</div>
+</div>

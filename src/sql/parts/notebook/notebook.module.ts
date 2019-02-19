@@ -27,6 +27,7 @@ import { TextCellComponent } from 'sql/parts/notebook/cellViews/textCell.compone
 import { OutputAreaComponent } from 'sql/parts/notebook/cellViews/outputArea.component';
 import { OutputComponent } from 'sql/parts/notebook/cellViews/output.component';
 import { PlaceholderCellComponent } from 'sql/parts/notebook/cellViews/placeholderCell.component';
+import { NewCellComponent } from 'sql/parts/notebook/cellViews/newCell.component';
 import LoadingSpinner from 'sql/parts/modelComponents/loadingSpinner.component';
 
 export const NotebookModule = (params, selector: string, instantiationService: IInstantiationService): any => {
@@ -41,6 +42,7 @@ export const NotebookModule = (params, selector: string, instantiationService: I
 			CodeCellComponent,
 			TextCellComponent,
 			PlaceholderCellComponent,
+			NewCellComponent,
 			NotebookComponent,
 			ComponentHostDirective,
 			OutputAreaComponent,
