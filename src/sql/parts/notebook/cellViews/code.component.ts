@@ -32,6 +32,8 @@ import { IConfigurationService } from 'vs/platform/configuration/common/configur
 import { Emitter, debounceEvent } from 'vs/base/common/event';
 import { CellTypes } from 'sql/parts/notebook/models/contracts';
 import { OVERRIDE_EDITOR_THEMING_SETTING } from 'sql/workbench/services/notebook/common/notebookService';
+import { StandaloneCodeEditor } from 'vs/editor/standalone/browser/standaloneCodeEditor';
+import { NoteBookCellModel } from 'sql/parts/notebook/notebookInput';
 
 export const CODE_SELECTOR: string = 'code-component';
 const MARKDOWN_CLASS = 'markdown';
@@ -45,16 +47,16 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	@ViewChild('moreactions', { read: ElementRef }) private moreActionsElementRef: ElementRef;
 	@ViewChild('editor', { read: ElementRef }) private codeElement: ElementRef;
 
-	public get cellModel(): ICellModel {
+	public get cellModel(): NoteBookCellModel {
 		return this._cellModel;
 	}
 
-	@Input() public set cellModel(value: ICellModel) {
+	@Input() public set cellModel(value: NoteBookCellModel) {
 		this._cellModel = value;
-		if (this.toolbarElement && value && value.cellType === CellTypes.Markdown) {
-			let nativeToolbar = <HTMLElement> this.toolbarElement.nativeElement;
-			DOM.addClass(nativeToolbar, MARKDOWN_CLASS);
-		}
+		// if (this.toolbarElement && value && value.cellType === CellTypes.Markdown) {
+		// 	let nativeToolbar = <HTMLElement> this.toolbarElement.nativeElement;
+		// 	DOM.addClass(nativeToolbar, MARKDOWN_CLASS);
+		// }
 	}
 
 	@Output() public onContentChanged = new EventEmitter<void>();
@@ -68,17 +70,17 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	}
 
 	@Input() set hover(value: boolean) {
-		this.cellModel.hover = value;
-		if (!this.isActive()) {
-			// Only make a change if we're not active, since this has priority
-			this.toggleMoreActionsButton(this.cellModel.hover);
-		}
+		// this.cellModel.hover = value;
+		// if (!this.isActive()) {
+		// 	// Only make a change if we're not active, since this has priority
+		// 	this.toggleMoreActionsButton(this.cellModel.hover);
+		// }
 	}
 
 	protected _actionBar: Taskbar;
 	private readonly _minimumHeight = 30;
 	private readonly _maximumHeight = 4000;
-	private _cellModel: ICellModel;
+	private _cellModel: NoteBookCellModel;
 	private _editor: QueryTextEditor;
 	private _editorInput: UntitledEditorInput;
 	private _editorModel: ITextModel;
@@ -118,16 +120,16 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		for (let propName in changes) {
 			if (propName === 'activeCellId') {
 				let changedProp = changes[propName];
-				let isActive = this.cellModel.id === changedProp.currentValue;
-				if (isActive && this._model.defaultKernel.display_name === notebookConstants.SQL
-					&& this.cellModel.cellType === CellTypes.Code
-					&& this.cellModel.cellUri) {
-					this._model.notebookOptions.connectionService.connect(this._model.activeConnection, this.cellModel.cellUri.toString()).catch(e => console.log(e));
-				}
-				this.toggleMoreActionsButton(isActive);
-				if (this._editor) {
-					this._editor.toggleEditorSelected(isActive);
-				}
+				// let isActive = this.cellModel.id === changedProp.currentValue;
+				// if (isActive && this._model.defaultKernel.display_name === notebookConstants.SQL
+				// 	&& this.cellModel.cellType === CellTypes.Code
+				// 	&& this.cellModel.cellUri) {
+				// 	this._model.notebookOptions.connectionService.connect(this._model.activeConnection, this.cellModel.cellUri.toString()).catch(e => console.log(e));
+				// }
+				// this.toggleMoreActionsButton(isActive);
+				// if (this._editor) {
+				// 	this._editor.toggleEditorSelected(isActive);
+				// }
 				break;
 			}
 		}
@@ -154,35 +156,19 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 
 	private createEditor(): void {
 		let instantiationService = this._instantiationService.createChild(new ServiceCollection([IProgressService, new SimpleProgressService()]));
-		this._editor = instantiationService.createInstance(QueryTextEditor);
+		let editor = instantiationService.createInstance(StandaloneCodeEditor, this.codeElement.nativeElement, {});
+		editor.setModel(this.cellModel);
+		editor.render();
+		editor.layout(new DOM.Dimension(800, 800));
+		/*this._editor = instantiationService.createInstance(QueryTextEditor);
 		this._editor.create(this.codeElement.nativeElement);
 		this._editor.setVisible(true);
 		this._editor.setMinimumHeight(this._minimumHeight);
 		this._editor.setMaximumHeight(this._maximumHeight);
-		let uri = this.cellModel.cellUri;
-		this._editorInput = instantiationService.createInstance(UntitledEditorInput, uri, false, this.cellModel.language, '', '');
-		this._editor.setInput(this._editorInput, undefined);
+		this._editor.setInput(this._cellModel, undefined);
 		this.setFocusAndScroll();
-		this._editorInput.resolve().then(model => {
-			this._editorModel = model.textEditorModel;
-			this._modelService.updateModel(this._editorModel, this.cellModel.source);
-		});
-		let isActive = this.cellModel.id === this._activeCellId;
-		this._editor.toggleEditorSelected(isActive);
-
-		// For markdown cells, don't show line numbers unless we're using editor defaults
-		let overrideEditorSetting = this._configurationService.getValue<boolean>(OVERRIDE_EDITOR_THEMING_SETTING);
-		this._editor.hideLineNumbers = (overrideEditorSetting && this.cellModel.cellType === CellTypes.Markdown);
 
 		this._register(this._editor);
-		this._register(this._editorInput);
-		this._register(this._editorModel.onDidChangeContent(e => {
-			this._editor.setHeightToScrollHeight();
-			this.cellModel.source = this._editorModel.getValue();
-			this.onContentChanged.emit();
-			// TODO see if there's a better way to handle reassessing size.
-			setTimeout(() => this._layoutEmitter.fire(), 250);
-		}));
 		this._register(this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration('editor.wordWrap')) {
 				this._editor.setHeightToScrollHeight(true);
@@ -190,42 +176,43 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		}));
 		this._register(this.model.layoutChanged(() => this._layoutEmitter.fire, this));
 		this.layout();
+		*/
 	}
 
 	public layout(): void {
-		this._editor.layout(new DOM.Dimension(
-			DOM.getContentWidth(this.codeElement.nativeElement),
-			DOM.getContentHeight(this.codeElement.nativeElement)));
-		this._editor.setHeightToScrollHeight();
+		// this._editor.layout(new DOM.Dimension(
+		// 	DOM.getContentWidth(this.codeElement.nativeElement),
+		// 	DOM.getContentHeight(this.codeElement.nativeElement)));
+		// this._editor.setHeightToScrollHeight();
 	}
 
 	protected initActionBar() {
-		let context = new CellContext(this.model, this.cellModel);
-		let runCellAction = this._instantiationService.createInstance(RunCellAction, context);
+		// let context = new CellContext(this.model, this.cellModel);
+		// let runCellAction = this._instantiationService.createInstance(RunCellAction, context);
 
-		let taskbar = <HTMLElement>this.toolbarElement.nativeElement;
-		this._actionBar = new Taskbar(taskbar, this.contextMenuService);
-		this._actionBar.context = context;
-		this._actionBar.setContent([
-			{ action: runCellAction }
-		]);
+		// let taskbar = <HTMLElement>this.toolbarElement.nativeElement;
+		// this._actionBar = new Taskbar(taskbar, this.contextMenuService);
+		// this._actionBar.context = context;
+		// this._actionBar.setContent([
+		// 	{ action: runCellAction }
+		// ]);
 
-		this._cellToggleMoreActions.onInit(this.moreActionsElementRef, this.model, this.cellModel);
+		// this._cellToggleMoreActions.onInit(this.moreActionsElementRef, this.model, this.cellModel);
 	}
 
 	/// Editor Functions
 	private updateModel() {
-		if (this._editorModel) {
-			this._modelService.updateModel(this._editorModel, this.cellModel.source);
-		}
+		// if (this._editorModel) {
+		// 	this._modelService.updateModel(this._editorModel, this.cellModel.source);
+		// }
 	}
 
 	private updateLanguageMode() {
-		if (this._editorModel && this._editor) {
-			this._modeService.getOrCreateMode(this.cellModel.language).then((modeValue) => {
-				this._modelService.setMode(this._editorModel, modeValue);
-			});
-		}
+		// if (this._editorModel && this._editor) {
+		// 	this._modeService.getOrCreateMode(this.cellModel.language).then((modeValue) => {
+		// 		this._modelService.setMode(this._editorModel, modeValue);
+		// 	});
+		// }
 	}
 
 	private updateTheme(theme: IColorTheme): void {
@@ -237,14 +224,14 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	}
 
 	private setFocusAndScroll(): void {
-		if (this.cellModel.id === this._activeCellId) {
-			this._editor.focus();
-			this._editor.getContainer().scrollIntoView();
-		}
+		// if (this.cellModel.id === this._activeCellId) {
+		// 	this._editor.focus();
+		// 	this._editor.getContainer().scrollIntoView();
+		// }
 	}
 
 	protected isActive() {
-		return this.cellModel && this.cellModel.id === this.activeCellId;
+		// return this.cellModel && this.cellModel.id === this.activeCellId;
 	}
 
 	protected toggleMoreActionsButton(isActiveOrHovered: boolean) {

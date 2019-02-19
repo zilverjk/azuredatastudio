@@ -116,7 +116,7 @@ export class ExtHostNotebookDocumentsAndEditors implements ExtHostNotebookDocume
 		}
 
 		if (delta.newActiveEditor !== undefined) {
-			ok(delta.newActiveEditor === null || this._editors.has(delta.newActiveEditor), `active editor '${delta.newActiveEditor}' does not exist`);
+			// ok(delta.newActiveEditor === null || this._editors.has(delta.newActiveEditor), `active editor '${delta.newActiveEditor}' does not exist`);
 			this._activeEditorId = delta.newActiveEditor;
 		}
 
