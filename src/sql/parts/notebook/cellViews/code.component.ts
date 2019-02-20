@@ -34,6 +34,7 @@ import { CellTypes } from 'sql/parts/notebook/models/contracts';
 import { OVERRIDE_EDITOR_THEMING_SETTING } from 'sql/workbench/services/notebook/common/notebookService';
 import { StandaloneCodeEditor } from 'vs/editor/standalone/browser/standaloneCodeEditor';
 import { NoteBookCellModel } from 'sql/parts/notebook/notebookInput';
+import { CellModel } from 'sql/parts/notebook/models/cell';
 
 export const CODE_SELECTOR: string = 'code-component';
 const MARKDOWN_CLASS = 'markdown';
@@ -47,11 +48,11 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	@ViewChild('moreactions', { read: ElementRef }) private moreActionsElementRef: ElementRef;
 	@ViewChild('editor', { read: ElementRef }) private codeElement: ElementRef;
 
-	public get cellModel(): NoteBookCellModel {
+	public get cellModel(): CellModel {
 		return this._cellModel;
 	}
 
-	@Input() public set cellModel(value: NoteBookCellModel) {
+	@Input() public set cellModel(value: CellModel) {
 		this._cellModel = value;
 		// if (this.toolbarElement && value && value.cellType === CellTypes.Markdown) {
 		// 	let nativeToolbar = <HTMLElement> this.toolbarElement.nativeElement;
@@ -80,7 +81,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	protected _actionBar: Taskbar;
 	private readonly _minimumHeight = 30;
 	private readonly _maximumHeight = 4000;
-	private _cellModel: NoteBookCellModel;
+	private _cellModel: CellModel;
 	private _editor: QueryTextEditor;
 	private _editorInput: UntitledEditorInput;
 	private _editorModel: ITextModel;
@@ -156,19 +157,37 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 
 	private createEditor(): void {
 		let instantiationService = this._instantiationService.createChild(new ServiceCollection([IProgressService, new SimpleProgressService()]));
-		let editor = instantiationService.createInstance(StandaloneCodeEditor, this.codeElement.nativeElement, {});
-		editor.setModel(this.cellModel);
-		editor.render();
-		editor.layout(new DOM.Dimension(800, 800));
-		/*this._editor = instantiationService.createInstance(QueryTextEditor);
+		this._editor = instantiationService.createInstance(QueryTextEditor);
 		this._editor.create(this.codeElement.nativeElement);
 		this._editor.setVisible(true);
 		this._editor.setMinimumHeight(this._minimumHeight);
 		this._editor.setMaximumHeight(this._maximumHeight);
-		this._editor.setInput(this._cellModel, undefined);
+		let uri = this.cellModel.cellUri;
+		this._editorInput = instantiationService.createInstance(UntitledEditorInput, uri, false, this.cellModel.language, '', '');
+		this._editor.setInput(this._editorInput, undefined);
 		this.setFocusAndScroll();
+		this._editorInput.resolve().then(model => {
+			this._editorModel = model.textEditorModel;
+			this._modelService.updateModel(this._editorModel, this.cellModel.source);
+		});
+		let isActive = this.cellModel.id === this._activeCellId;
+		this._editor.toggleEditorSelected(isActive);
+
+		// For markdown cells, don't show line numbers unless we're using editor defaults
+		let overrideEditorSetting = this._configurationService.getValue<boolean>(OVERRIDE_EDITOR_THEMING_SETTING);
+		this._editor.hideLineNumbers = (overrideEditorSetting && this.cellModel.cellType === CellTypes.Markdown);
 
 		this._register(this._editor);
+		this._register(this._editorInput);
+		this._register(this._editorModel.onDidChangeContent(e => {
+			this._editor.setHeightToScrollHeight();
+			this.cellModel.source = this._editorModel.getValue();
+			this.cellModel.updateValue(this.cellModel.source);
+			this.onContentChanged.emit();
+			// this.checkForLanguageMagics();
+			// TODO see if there's a better way to handle reassessing size.
+			setTimeout(() => this._layoutEmitter.fire(), 250);
+		}));
 		this._register(this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration('editor.wordWrap')) {
 				this._editor.setHeightToScrollHeight(true);
@@ -176,7 +195,6 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		}));
 		this._register(this.model.layoutChanged(() => this._layoutEmitter.fire, this));
 		this.layout();
-		*/
 	}
 
 	public layout(): void {

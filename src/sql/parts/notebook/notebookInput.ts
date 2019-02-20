@@ -25,7 +25,7 @@ import { ITextFileService, ISaveOptions } from 'vs/workbench/services/textfile/c
 import { ITextModelService } from 'vs/editor/common/services/resolverService';
 import { IHashService } from 'vs/workbench/services/hash/common/hashService';
 import { IUriDisplayService } from 'vs/platform/uriDisplay/common/uriDisplay';
-import { INotebookModel } from 'sql/parts/notebook/models/modelInterfaces';
+import { INotebookModel, ICellModel } from 'sql/parts/notebook/models/modelInterfaces';
 import { TextFileEditorModel } from 'vs/workbench/services/textfile/common/textFileEditorModel';
 import { UntitledEditorModel } from 'vs/workbench/common/editor/untitledEditorModel';
 import { ITextModel, IIdentifiedSingleEditOperation, ICursorStateComputer, ITextBufferFactory, ITextModelCreationOptions } from 'vs/editor/common/model';
@@ -37,6 +37,8 @@ import { Position, IPosition } from 'vs/editor/common/core/position';
 import { LanguageIdentifier } from 'vs/editor/common/modes';
 import { UntitledEditorInput } from 'vs/workbench/common/editor/untitledEditorInput';
 import { IModeService } from 'vs/editor/common/services/modeService';
+import { CellModel } from 'sql/parts/notebook/models/cell';
+import { EditOperation } from 'vs/editor/common/core/editOperation';
 
 export type ModeViewSaveHandler = (handle: number) => Thenable<boolean>;
 
@@ -106,7 +108,7 @@ export class NoteBookCellModel extends TextModel {
 }
 
 export class NotebookEditorModel extends EditorModel {
-	private inputs: NoteBookCellModel[];
+	private inputs: CellModel[];
 
 	constructor(
 		private textEditorModel: TextFileEditorModel,
@@ -121,33 +123,18 @@ export class NotebookEditorModel extends EditorModel {
 		let tree = parseTree(model.getValue());
 		tree.children.find(v => v.children[0].value === 'cells').children[1].children.map(c => {
 			let sourceNode = c.children.find(v => v.children[0].value === 'source');
-			let languageNode = c.children.find(v => v.children[0].value === 'metadata').children[1].children.find(v => v.children[0].value === 'language');
-			let offsetPosition = model.getPositionAt(sourceNode.children[1].offset);
+			let startPosition = model.getPositionAt(sourceNode.children[1].offset);
+			let endPosition = model.getPositionAt(sourceNode.children[1].offset + sourceNode.children[1].length);
 			// account for quote
 			let shiftoffset = sourceNode.children[1].offset + 1;
-			let textModel = new NoteBookCellModel({
-				applyEdits: (operations: IIdentifiedSingleEditOperation[]) => {
-					this.textEditorModel.textEditorModel.applyEdits(operations.map(v => {
-						let startoffset = textModel.getOffsetAt(v.range.getStartPosition());
-						let endOffset = textModel.getOffsetAt(v.range.getEndPosition());
-						let startPosition = model.getPositionAt(shiftoffset + startoffset);
-						let endPosition = model.getPositionAt(shiftoffset + endOffset);
-						v.range = Range.fromPositions(startPosition, endPosition);
-						return v;
-					}));
-				},
-				pushEditOperations: (editOperations: IIdentifiedSingleEditOperation[]) => {
-					this.textEditorModel.textEditorModel.pushEditOperations([], editOperations.map(v => {
-						let startoffset = textModel.getOffsetAt(v.range.getStartPosition());
-						let endOffset = textModel.getOffsetAt(v.range.getEndPosition());
-						let startPosition = model.getPositionAt(shiftoffset + startoffset);
-						let endPosition = model.getPositionAt(shiftoffset + endOffset);
-						v.range = Range.fromPositions(startPosition, endPosition);
-						return v;
-					}), () => []);
-				}
-			}, sourceNode.children[1].value, TextModel.DEFAULT_CREATION_OPTIONS, this.modeService.getLanguageIdentifier(languageNode.children[1].value));
-			this.inputs.push(textModel);
+			let cellModel = new CellModel(undefined, undefined, undefined, (val: string) => {
+				let insertString = '"' + val.replace(/\n/, '\\n') + '"';
+				let editOperation = EditOperation.replace(Range.fromPositions(startPosition, endPosition), insertString);
+				model.applyEdits([editOperation]);
+				endPosition = model.getPositionAt(sourceNode.children[1].offset + insertString.length);
+			});
+			cellModel.source = sourceNode.children[1].value;
+			this.inputs.push(cellModel);
 		});
 	}
 
@@ -159,7 +146,7 @@ export class NotebookEditorModel extends EditorModel {
 		return this.textEditorModel.isDirty();
 	}
 
-	get textEditorInputs(): NoteBookCellModel[] {
+	get textEditorInputs(): CellModel[] {
 		if (!this.inputs) {
 			this.parse();
 		}
