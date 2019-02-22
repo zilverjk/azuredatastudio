@@ -29,14 +29,7 @@ import { INotebookModel, ICellModel } from 'sql/parts/notebook/models/modelInter
 import { TextFileEditorModel } from 'vs/workbench/services/textfile/common/textFileEditorModel';
 import { UntitledEditorModel } from 'vs/workbench/common/editor/untitledEditorModel';
 import { ITextModel, IIdentifiedSingleEditOperation, ICursorStateComputer, ITextBufferFactory, ITextModelCreationOptions } from 'vs/editor/common/model';
-import { Selection } from 'vs/editor/common/core/selection';
-import { TextModel } from 'vs/editor/common/model/textModel';
-import { assign } from 'vs/base/common/objects';
 import { IRange, Range } from 'vs/editor/common/core/range';
-import { Position, IPosition } from 'vs/editor/common/core/position';
-import { LanguageIdentifier } from 'vs/editor/common/modes';
-import { UntitledEditorInput } from 'vs/workbench/common/editor/untitledEditorInput';
-import { IModeService } from 'vs/editor/common/services/modeService';
 import { CellModel } from 'sql/parts/notebook/models/cell';
 import { EditOperation } from 'vs/editor/common/core/editOperation';
 
@@ -89,11 +82,10 @@ export class NotebookEditorModel extends EditorModel {
 			let sourceLength: number = sourceNode.children[1]? sourceNode.children[1].length : 0;
 			let startPosition = model.getPositionAt(offSetNumber);
 			let endPosition = model.getPositionAt(offSetNumber + sourceLength);
-			// account for quote
-			//let shiftoffset = sourceNode.children[1].offset + 1;
+
 			let cellModel = new CellModel(undefined, undefined, undefined, (val: string) => {
-				//let insertString = '"' + val.replace(/\n/, '\\n') + '"';
-				let insertString = val;
+				//let insertString = '"' + val.replace(/[\n\r]/g, '\\n') + '"';
+				let insertString = '"' + val + '"';
 				let editOperation = EditOperation.replace(Range.fromPositions(startPosition, endPosition), insertString);
 				model.applyEdits([editOperation]);
 				endPosition = model.getPositionAt(sourceNode.children[1].offset + insertString.length);
