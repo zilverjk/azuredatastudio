@@ -39,7 +39,7 @@ export class CellModel implements ICellModel {
 	private _cellUri: URI;
 	public id: string;
 
-	constructor(private factory: IModelFactory, cellData?: nb.ICellContents, private _options?: ICellModelOptions) {
+	constructor(private factory: IModelFactory, cellData?: nb.ICellContents, private _options?: ICellModelOptions, public updateValue?: (val: string) => void) {
 		this.id = `${modelId++}`;
 		if (cellData) {
 			// Read in contents if available
@@ -137,6 +137,10 @@ export class CellModel implements ICellModel {
 		return this._cellType;
 	}
 
+	public set cellType(val : CellType) {
+		this._cellType = val;
+	}
+
 	public get source(): string {
 		return this._source;
 	}
@@ -155,7 +159,7 @@ export class CellModel implements ICellModel {
 		if (this._language) {
 			return this._language;
 		}
-		return this.options.notebook.language;
+		return '';
 	}
 
 	public setOverrideLanguage(newLanguage: string) {

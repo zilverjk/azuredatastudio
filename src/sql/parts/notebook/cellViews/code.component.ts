@@ -30,7 +30,7 @@ import { IConfigurationService } from 'vs/platform/configuration/common/configur
 import { Emitter, debounceEvent } from 'vs/base/common/event';
 import { CellTypes } from 'sql/parts/notebook/models/contracts';
 import { OVERRIDE_EDITOR_THEMING_SETTING } from 'sql/workbench/services/notebook/common/notebookService';
-import * as notebookUtils from 'sql/parts/notebook/notebookUtils';
+import { CellModel } from 'sql/parts/notebook/models/cell';
 
 export const CODE_SELECTOR: string = 'code-component';
 const MARKDOWN_CLASS = 'markdown';
@@ -44,11 +44,11 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	@ViewChild('moreactions', { read: ElementRef }) private moreActionsElementRef: ElementRef;
 	@ViewChild('editor', { read: ElementRef }) private codeElement: ElementRef;
 
-	public get cellModel(): ICellModel {
+	public get cellModel(): CellModel {
 		return this._cellModel;
 	}
 
-	@Input() public set cellModel(value: ICellModel) {
+	@Input() public set cellModel(value: CellModel) {
 		this._cellModel = value;
 		if (this.toolbarElement && value && value.cellType === CellTypes.Markdown) {
 			let nativeToolbar = <HTMLElement> this.toolbarElement.nativeElement;
@@ -63,7 +63,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		this._register(value.kernelChanged(() => {
 			// On kernel change, need to reevaluate the language for each cell
 			// Refresh based on the cell magic (since this is kernel-dependent) and then update using notebook language
-			this.checkForLanguageMagics();
+			//this.checkForLanguageMagics();
 			this.updateLanguageMode();
 		}));
 	}
@@ -83,7 +83,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	protected _actionBar: Taskbar;
 	private readonly _minimumHeight = 30;
 	private readonly _maximumHeight = 4000;
-	private _cellModel: ICellModel;
+	private _cellModel: CellModel;
 	private _editor: QueryTextEditor;
 	private _editorInput: UntitledEditorInput;
 	private _editorModel: ITextModel;
@@ -158,7 +158,6 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		this._editor = instantiationService.createInstance(QueryTextEditor);
 		this._editor.create(this.codeElement.nativeElement);
 		this._editor.setVisible(true);
-		this._editor.setMinimumHeight(this._minimumHeight);
 		this._editor.setMaximumHeight(this._maximumHeight);
 		let uri = this.cellModel.cellUri;
 		this._editorInput = instantiationService.createInstance(UntitledEditorInput, uri, false, this.cellModel.language, '', '');
@@ -180,8 +179,8 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		this._register(this._editorModel.onDidChangeContent(e => {
 			this._editor.setHeightToScrollHeight();
 			this.cellModel.source = this._editorModel.getValue();
+			this.cellModel.updateValue(this.cellModel.source);
 			this.onContentChanged.emit();
-			this.checkForLanguageMagics();
 			// TODO see if there's a better way to handle reassessing size.
 			setTimeout(() => this._layoutEmitter.fire(), 250);
 		}));
@@ -190,7 +189,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 				this._editor.setHeightToScrollHeight(true);
 			}
 		}));
-		this._register(this.model.layoutChanged(() => this._layoutEmitter.fire, this));
+		//this._register(this.model.layoutChanged(() => this._layoutEmitter.fire, this));
 		this.layout();
 	}
 
@@ -222,31 +221,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		}
 	}
 
-	private checkForLanguageMagics(): void {
-		try {
-			if (!this.cellModel || this.cellModel.cellType !== CellTypes.Code) {
-				return;
-			}
-			if (this._editorModel && this._editor && this._editorModel.getLineCount() > 1) {
-				// Only try to match once we've typed past the first line
-				let magicName = notebookUtils.tryMatchCellMagic(this._editorModel.getLineContent(1));
-				if (magicName) {
-					let kernelName = this._model.clientSession && this._model.clientSession.kernel ? this._model.clientSession.kernel.name : undefined;
-					let magic = this._model.notebookOptions.cellMagicMapper.toLanguageMagic(magicName, kernelName);
-					if (magic && this.cellModel.language !== magic.language) {
-						this.cellModel.setOverrideLanguage(magic.language);
-						this.updateLanguageMode();
-					}
-				} else {
-					this.cellModel.setOverrideLanguage(undefined);
-				}
-			}
-		} catch (err) {
-			// No-op for now. Should we log?
-		}
-	}
-
-	private updateLanguageMode(): void {
+	private updateLanguageMode() {
 		if (this._editorModel && this._editor) {
 			this._modeService.getOrCreateMode(this.cellModel.language).then((modeValue) => {
 				this._modelService.setMode(this._editorModel, modeValue);

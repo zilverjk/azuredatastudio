@@ -72,6 +72,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 	private _trustedAction: TrustedAction;
 	private _providerRelatedActions: IAction[] = [];
 
+	private _cells: any;
 
 	constructor(
 		@Inject(forwardRef(() => CommonServiceInterface)) private _bootstrapService: CommonServiceInterface,
@@ -100,6 +101,9 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 		super();
 		this.updateProfile();
 		this.isLoading = true;
+		_notebookParams.input.resolve().then(m => {
+			this._cells = m.textEditorInputs;
+		});
 	}
 
 	private updateProfile(): void {
@@ -154,7 +158,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 	}
 
 	public get cells(): ICellModel[] {
-		return this._model ? this._model.cells : [];
+		return this._cells;
 	}
 
 	private updateTheme(theme: IColorTheme): void {
@@ -209,6 +213,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 	}
 
 	public onKeyDown(event) {
+
 		switch (event.key) {
 			case 'ArrowDown':
 			case 'ArrowRight':
@@ -226,6 +231,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 			default:
 				break;
 		}
+
 	}
 
 	private async doLoad(): Promise<void> {
@@ -239,7 +245,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 			this._modelReadyDeferred.reject(error);
 		} finally {
 			// Always add the editor for now to close loop, even if loading contents failed
-			this.notebookService.addNotebookEditor(this);
+			//this.notebookService.addNotebookEditor(this);
 		}
 	}
 
@@ -250,7 +256,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 
 	private async loadModel(): Promise<void> {
 		await this.awaitNonDefaultProvider();
-		let providerId = 'sql'; // this is tricky; really should also depend on the connection profile
+		let providerId =  'sql'; // notebookUtils.sqlNotebooksEnabled(this.contextKeyService) ? 'sql' : this._notebookParams.providers.find(provider => provider !== DEFAULT_NOTEBOOK_PROVIDER); // this is tricky; really should also depend on the connection profile
 		this.setContextKeyServiceWithProviderId(providerId);
 		this.fillInActionsForCurrentContext();
 		for (let providerId of this._notebookParams.providers) {
@@ -267,11 +273,11 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 			cellMagicMapper: new CellMagicMapper(this.notebookService.languageMagics),
 			providerId: 'sql', // this is tricky; really should also depend on the connection profile
 			defaultKernel: this._notebookParams.input.defaultKernel,
-			layoutChanged: this._notebookParams.input.layoutChanged,
+			layoutChanged: undefined,//this._notebookParams.input.layoutChanged,
 			capabilitiesService: this.capabilitiesService
 		}, false, this.profile);
 		model.onError((errInfo: INotification) => this.handleModelError(errInfo));
-		await model.requestModelLoad(this._notebookParams.isTrusted);
+		//await model.requestModelLoad(this._notebookParams.isTrusted);
 		model.contentChanged((change) => this.handleContentChanged(change));
 		model.onProviderIdChange((provider) => this.handleProviderIdChanged(provider));
 		this._model = this._register(model);
@@ -478,7 +484,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 
 	private setDirty(isDirty: boolean): void {
 		if (this._notebookParams.input) {
-			this._notebookParams.input.setDirty(isDirty);
+			// this._notebookParams.input.setDirty(isDirty);
 		}
 	}
 
