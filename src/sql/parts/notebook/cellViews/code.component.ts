@@ -30,12 +30,9 @@ import { IConfigurationService } from 'vs/platform/configuration/common/configur
 import { Emitter, debounceEvent } from 'vs/base/common/event';
 import { CellTypes } from 'sql/parts/notebook/models/contracts';
 import { OVERRIDE_EDITOR_THEMING_SETTING } from 'sql/workbench/services/notebook/common/notebookService';
-<<<<<<< HEAD
 import { CellModel } from 'sql/parts/notebook/models/cell';
-=======
-import * as notebookUtils from 'sql/parts/notebook/notebookUtils';
 import { UntitledEditorModel } from 'vs/workbench/common/editor/untitledEditorModel';
->>>>>>> c3f02980a0e03c637aafe028bab76ef737d738ab
+import * as notebookUtils from 'sql/parts/notebook/notebookUtils';
 
 export const CODE_SELECTOR: string = 'code-component';
 const MARKDOWN_CLASS = 'markdown';
@@ -182,37 +179,21 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 
 		this._register(this._editor);
 		this._register(this._editorInput);
-<<<<<<< HEAD
 		this._register(this._editorModel.onDidChangeContent(e => {
 			this._editor.setHeightToScrollHeight();
 			this.cellModel.source = this._editorModel.getValue();
 			this.cellModel.updateValue(this.cellModel.source);
 			this.onContentChanged.emit();
+			//this.checkForLanguageMagics();
 			// TODO see if there's a better way to handle reassessing size.
 			setTimeout(() => this._layoutEmitter.fire(), 250);
 		}));
-=======
-		if (this._editorModel) {
-			this._register(this._editorModel.onDidChangeContent(e => {
-				this._editor.setHeightToScrollHeight();
-				this.cellModel.source = this._editorModel.getValue();
-				this.onContentChanged.emit();
-				this.checkForLanguageMagics();
-				// TODO see if there's a better way to handle reassessing size.
-				setTimeout(() => this._layoutEmitter.fire(), 250);
-			}));
-		}
->>>>>>> c3f02980a0e03c637aafe028bab76ef737d738ab
 		this._register(this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration('editor.wordWrap')) {
 				this._editor.setHeightToScrollHeight(true);
 			}
 		}));
-<<<<<<< HEAD
-		//this._register(this.model.layoutChanged(() => this._layoutEmitter.fire, this));
-=======
 		this._register(this.model.layoutChanged(() => this._layoutEmitter.fire(), this));
->>>>>>> c3f02980a0e03c637aafe028bab76ef737d738ab
 		this.layout();
 	}
 

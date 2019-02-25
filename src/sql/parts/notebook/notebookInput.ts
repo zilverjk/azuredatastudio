@@ -24,7 +24,6 @@ import { IInstantiationService } from 'vs/platform/instantiation/common/instanti
 import { ITextFileService, ISaveOptions } from 'vs/workbench/services/textfile/common/textfiles';
 import { ITextModelService } from 'vs/editor/common/services/resolverService';
 import { IHashService } from 'vs/workbench/services/hash/common/hashService';
-import { IUriDisplayService } from 'vs/platform/uriDisplay/common/uriDisplay';
 import { INotebookModel, ICellModel } from 'sql/parts/notebook/models/modelInterfaces';
 import { TextFileEditorModel } from 'vs/workbench/services/textfile/common/textFileEditorModel';
 import { UntitledEditorModel } from 'vs/workbench/common/editor/untitledEditorModel';
