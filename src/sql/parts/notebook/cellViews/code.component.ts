@@ -179,15 +179,17 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 
 		this._register(this._editor);
 		this._register(this._editorInput);
-		this._register(this._editorModel.onDidChangeContent(e => {
-			this._editor.setHeightToScrollHeight();
-			this.cellModel.source = this._editorModel.getValue();
-			this.cellModel.updateValue(this.cellModel.source);
-			this.onContentChanged.emit();
-			//this.checkForLanguageMagics();
-			// TODO see if there's a better way to handle reassessing size.
-			setTimeout(() => this._layoutEmitter.fire(), 250);
-		}));
+		if (this._editorModel) {
+			this._register(this._editorModel.onDidChangeContent(e => {
+				this._editor.setHeightToScrollHeight();
+				this.cellModel.source = this._editorModel.getValue();
+				this.cellModel.updateValue(this.cellModel.source);
+				this.onContentChanged.emit();
+				//this.checkForLanguageMagics();
+				// TODO see if there's a better way to handle reassessing size.
+				setTimeout(() => this._layoutEmitter.fire(), 250);
+			}));
+		}
 		this._register(this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration('editor.wordWrap')) {
 				this._editor.setHeightToScrollHeight(true);
