@@ -63,12 +63,9 @@ export class NotebookEditor extends BaseEditor {
 		if (this.input && this.input.matches(input)) {
 			return TPromise.as(undefined);
 		}
-
 		const parentElement = this.getContainer();
 
 		super.setInput(input, options, CancellationToken.None);
-
-		input.resolve();
 
 		$(parentElement).clearChildren();
 
@@ -80,7 +77,7 @@ export class NotebookEditor extends BaseEditor {
 			return TPromise.wrap<void>(this.bootstrapAngular(input));
 		} else {
 			this._notebookContainer = DOM.append(parentElement, input.container);
-			 //input.doChangeLayout();
+			 input.doChangeLayout();
 			return TPromise.wrap<void>(null);
 		}
 	}
@@ -92,7 +89,7 @@ export class NotebookEditor extends BaseEditor {
 		// Get the bootstrap params and perform the bootstrap
 		input.hasBootstrapped = true;
 		let params: INotebookParams = {
-			notebookUri: input.getResource(),
+			notebookUri: input.notebookUri,
 			input: input,
 			providerId: input.providerId ? input.providerId : DEFAULT_NOTEBOOK_PROVIDER,
 			providers: input.providers ? input.providers : [DEFAULT_NOTEBOOK_PROVIDER],

@@ -30,6 +30,7 @@ import { ITextModel, IIdentifiedSingleEditOperation, ICursorStateComputer, IText
 import { IRange, Range } from 'vs/editor/common/core/range';
 import { CellModel } from 'sql/parts/notebook/models/cell';
 import { EditOperation } from 'vs/editor/common/core/editOperation';
+import { parseTree } from 'vs/base/common/json';
 
 export type ModeViewSaveHandler = (handle: number) => Thenable<boolean>;
 
@@ -42,7 +43,6 @@ export class NotebookEditorModel extends EditorModel {
 	private _standardKernels: IStandardKernelWithProvider[];
 	private _defaultKernel: azdata.nb.IKernelSpec;
 	constructor(public readonly notebookUri: URI,
-		private readonly handle: number,
 		private _isTrusted: boolean = false,
 		private textEditorModel: TextFileEditorModel,
 		provider?: string,
