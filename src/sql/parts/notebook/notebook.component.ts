@@ -499,7 +499,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 		let secondary: IAction[] = [];
 		let notebookBarMenu = this.menuService.createMenu(MenuId.NotebookToolbar, this.contextKeyService);
 		let groups = notebookBarMenu.getActions({ arg: null, shouldForwardArgs: true });
-		fillInActions(groups, { primary, secondary }, false, (group: string) => group === undefined);
+		fillInActions(groups, { primary, secondary }, false, (group: string) => group === undefined || group === '');
 		this.addPrimaryContributedActions(primary);
 	}
 
