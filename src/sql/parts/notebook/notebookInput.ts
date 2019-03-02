@@ -183,6 +183,13 @@ export class NotebookInput extends EditorInput {
 		return this._model.notebookUri;
 	}
 
+	public getName(): string {
+		if (!this._title) {
+			this._title = resources.basenameOrAuthority(this._model.notebookUri);
+		}
+		return this._title;
+	}
+
 	public get providerId(): string {
 		return this._model.providerId;
 	}

@@ -61,16 +61,18 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	@Output() public onContentChanged = new EventEmitter<void>();
 
 	@Input() set model(value: NotebookModel) {
-		this._model = value;
-		this._register(value.kernelChanged(() => {
-			// On kernel change, need to reevaluate the language for each cell
-			// Refresh based on the cell magic (since this is kernel-dependent) and then update using notebook language
-			//this.checkForLanguageMagics();
-			this.updateLanguageMode();
-		}));
-		this._register(value.onValidConnectionSelected(() => {
-			this.updateConnectionState(this.isActive());
-		}));
+		if (value) {
+			this._model = value;
+			this._register(value.kernelChanged(() => {
+				// On kernel change, need to reevaluate the language for each cell
+				// Refresh based on the cell magic (since this is kernel-dependent) and then update using notebook language
+				//this.checkForLanguageMagics();
+				this.updateLanguageMode();
+			}));
+			this._register(value.onValidConnectionSelected(() => {
+				this.updateConnectionState(this.isActive());
+			}));
+		}
 	}
 
 	@Input() set activeCellId(value: string) {
@@ -203,6 +205,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		this._register(this._editorModel.onDidChangeContent(e => {
 			this._editor.setHeightToScrollHeight();
 			this.cellModel.source = this._editorModel.getValue();
+			this.cellModel.updateValue(this.cellModel.source);
 			this.onContentChanged.emit();
 			//this.checkForLanguageMagics();
 			// TODO see if there's a better way to handle reassessing size.
@@ -213,7 +216,9 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 				this._editor.setHeightToScrollHeight(true);
 			}
 		}));
-		this._register(this.model.layoutChanged(() => this._layoutEmitter.fire(), this));
+		if (this.model) {
+			this._register(this.model.layoutChanged(() => this._layoutEmitter.fire(), this));
+		}
 		this.layout();
 	}
 
