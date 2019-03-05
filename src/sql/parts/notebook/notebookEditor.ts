@@ -63,7 +63,6 @@ export class NotebookEditor extends BaseEditor {
 		if (this.input && this.input.matches(input)) {
 			return TPromise.as(undefined);
 		}
-
 		const parentElement = this.getContainer();
 
 		super.setInput(input, options, CancellationToken.None);
