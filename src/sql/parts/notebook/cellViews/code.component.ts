@@ -61,18 +61,16 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	@Output() public onContentChanged = new EventEmitter<void>();
 
 	@Input() set model(value: NotebookModel) {
-		if (value) {
-			this._model = value;
-			this._register(value.kernelChanged(() => {
-				// On kernel change, need to reevaluate the language for each cell
-				// Refresh based on the cell magic (since this is kernel-dependent) and then update using notebook language
-				//this.checkForLanguageMagics();
-				this.updateLanguageMode();
-			}));
-			this._register(value.onValidConnectionSelected(() => {
-				this.updateConnectionState(this.isActive());
-			}));
-		}
+		this._model = value;
+		this._register(value.kernelChanged(() => {
+			// On kernel change, need to reevaluate the language for each cell
+			// Refresh based on the cell magic (since this is kernel-dependent) and then update using notebook language
+			this.checkForLanguageMagics();
+			this.updateLanguageMode();
+		}));
+		this._register(value.onValidConnectionSelected(() => {
+			this.updateConnectionState(this.isActive());
+		}));
 	}
 
 	@Input() set activeCellId(value: string) {
@@ -187,6 +185,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		this._editor = instantiationService.createInstance(QueryTextEditor);
 		this._editor.create(this.codeElement.nativeElement);
 		this._editor.setVisible(true);
+		this._editor.setMinimumHeight(this._minimumHeight);
 		this._editor.setMaximumHeight(this._maximumHeight);
 		let uri = this.cellModel.cellUri;
 		this._editorInput = instantiationService.createInstance(UntitledEditorInput, uri, false, this.cellModel.language, this.cellModel.source, '');
@@ -215,9 +214,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 				this._editor.setHeightToScrollHeight(true);
 			}
 		}));
-		if (this.model) {
-			this._register(this.model.layoutChanged(() => this._layoutEmitter.fire(), this));
-		}
+		this._register(this.model.layoutChanged(() => this._layoutEmitter.fire(), this));
 		this.layout();
 	}
 
@@ -240,6 +237,13 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		]);
 
 		this._cellToggleMoreActions.onInit(this.moreActionsElementRef, this.model, this.cellModel);
+	}
+
+	/// Editor Functions
+	private updateModel() {
+		if (this._editorModel) {
+			this._modelService.updateModel(this._editorModel, this.cellModel.source);
+		}
 	}
 
 	private checkForLanguageMagics(): void {
@@ -266,14 +270,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		}
 	}
 
-	/// Editor Functions
-	private updateModel() {
-		if (this._editorModel) {
-			this._modelService.updateModel(this._editorModel, this.cellModel.source);
-		}
-	}
-
-	private updateLanguageMode() {
+	private updateLanguageMode(): void {
 		if (this._editorModel && this._editor) {
 			let modeValue = this._modeService.create(this.cellModel.language);
 			this._modelService.setMode(this._editorModel, modeValue);
