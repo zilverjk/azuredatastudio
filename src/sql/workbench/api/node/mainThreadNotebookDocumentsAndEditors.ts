@@ -361,7 +361,10 @@ export class MainThreadNotebookDocumentsAndEditors extends Disposable implements
 			pinned: !options.preview
 		};
 		let trusted = uri.scheme === Schemas.untitled;
-		let model = new NotebookEditorModel(uri, trusted, undefined, undefined, undefined, options.connectionId);
+		// TODO fix to not instantiate the model. The Notebook input should only do that now?
+		// This implies we should pass id and other info to the input, and that should use it when
+		// setting up the model so it's consistent between here, the CustomInputConverter, and the de-serialization code
+		let model = new NotebookEditorModel(uri, trusted, undefined, this._notebookService);
 		let providerId = options.providerId;
 		let providers: string[] = undefined;
 		// Ensure there is always a sensible provider ID for this file type

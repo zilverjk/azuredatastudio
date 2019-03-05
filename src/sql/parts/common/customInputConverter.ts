@@ -65,14 +65,14 @@ export function convertEditorInput(input: EditorInput, options: IQueryEditorOpti
 					fileName = input.getName();
 					providerIds = getProvidersForFileName(fileName, notebookService);
 				}
-				let notebookInputModel = new NotebookEditorModel(uri, false, undefined);
-				notebookInputModel.providerId = providerIds.filter(provider => provider !== DEFAULT_NOTEBOOK_PROVIDER)[0];
-				notebookInputModel.providers = providerIds;
-				notebookInputModel.providers.forEach(provider => {
+				let notebookEditorModel = new NotebookEditorModel(uri, false, undefined, notebookService);
+				notebookEditorModel.providerId = providerIds.filter(provider => provider !== DEFAULT_NOTEBOOK_PROVIDER)[0];
+				notebookEditorModel.providers = providerIds;
+				notebookEditorModel.providers.forEach(provider => {
 					let standardKernels = getStandardKernelsForProvider(provider, notebookService);
-					notebookInputModel.standardKernels = standardKernels;
+					notebookEditorModel.standardKernels = standardKernels;
 				});
-				let notebookInput: NotebookInput = instantiationService.createInstance(NotebookInput, fileName, uri, notebookInputModel);
+				let notebookInput: NotebookInput = instantiationService.createInstance(NotebookInput, fileName, uri, notebookEditorModel);
 				return notebookInput;
 			});
 		}

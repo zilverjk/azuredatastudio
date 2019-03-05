@@ -31,6 +31,7 @@ import { Emitter, debounceEvent } from 'vs/base/common/event';
 import { CellTypes } from 'sql/parts/notebook/models/contracts';
 import { OVERRIDE_EDITOR_THEMING_SETTING } from 'sql/workbench/services/notebook/common/notebookService';
 import { CellModel } from 'sql/parts/notebook/models/cell';
+import * as notebookUtils from 'sql/parts/notebook/notebookUtils';
 import { UntitledEditorModel } from 'vs/workbench/common/editor/untitledEditorModel';
 import { IConnectionManagementService } from 'sql/platform/connection/common/connectionManagement';
 
@@ -205,9 +206,8 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		this._register(this._editorModel.onDidChangeContent(e => {
 			this._editor.setHeightToScrollHeight();
 			this.cellModel.source = this._editorModel.getValue();
-			this.cellModel.updateValue(this.cellModel.source);
 			this.onContentChanged.emit();
-			//this.checkForLanguageMagics();
+			this.checkForLanguageMagics();
 			// TODO see if there's a better way to handle reassessing size.
 			setTimeout(() => this._layoutEmitter.fire(), 250);
 		}));
@@ -241,6 +241,30 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 		]);
 
 		this._cellToggleMoreActions.onInit(this.moreActionsElementRef, this.model, this.cellModel);
+	}
+
+	private checkForLanguageMagics(): void {
+		try {
+			if (!this.cellModel || this.cellModel.cellType !== CellTypes.Code) {
+				return;
+			}
+			if (this._editorModel && this._editor && this._editorModel.getLineCount() > 1) {
+				// Only try to match once we've typed past the first line
+				let magicName = notebookUtils.tryMatchCellMagic(this._editorModel.getLineContent(1));
+				if (magicName) {
+					let kernelName = this._model.clientSession && this._model.clientSession.kernel ? this._model.clientSession.kernel.name : undefined;
+					let magic = this._model.notebookOptions.cellMagicMapper.toLanguageMagic(magicName, kernelName);
+					if (magic && this.cellModel.language !== magic.language) {
+						this.cellModel.setOverrideLanguage(magic.language);
+						this.updateLanguageMode();
+					}
+				} else {
+					this.cellModel.setOverrideLanguage(undefined);
+				}
+			}
+		} catch (err) {
+			// No-op for now. Should we log?
+		}
 	}
 
 	/// Editor Functions

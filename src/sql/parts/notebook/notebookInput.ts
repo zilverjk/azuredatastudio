@@ -36,65 +36,38 @@ export type ModeViewSaveHandler = (handle: number) => Thenable<boolean>;
 
 
 export class NotebookEditorModel extends EditorModel {
-	private inputs: CellModel[];
 	private dirty: boolean;
 	private readonly _onDidChangeDirty: Emitter<void> = this._register(new Emitter<void>());
 	private _providerId: string;
+	private _providers: string[];
+	private _connectionProfileId: string;
 	private _standardKernels: IStandardKernelWithProvider[];
 	private _defaultKernel: azdata.nb.IKernelSpec;
 	constructor(public readonly notebookUri: URI,
 		private _isTrusted: boolean = false,
 		private textEditorModel: TextFileEditorModel,
-		provider?: string,
-		private _providers?: string[],
-		private _connectionProfileId?: string,
+		@INotebookService private notebookService: INotebookService
 	) {
 		super();
-		this._providerId = provider;
 		this._standardKernels = [];
-
+		this._register(this.notebookService.onNotebookEditorAdd(notebook => {
+			if (notebook.id === this.notebookUri.toString()) {
+				// Hook to content change events
+				this._register(notebook.model.contentChanged(e => this.updateModel()));
+				this._register(notebook.model.kernelChanged(e => this.updateModel()));
+			}
+		}));
 	}
 
-	private parse() {
-		this.inputs = [];
-		if(!this.textEditorModel || !this.textEditorModel.textEditorModel)
-		{
-			return;
-		}
+	public get contentString(): string {
 		let model = this.textEditorModel.textEditorModel;
-		let tree = parseTree(model.getValue());
-		if(!tree || !tree.children)
-		{
-			return;
-		}
-		let cellNode = tree.children.find(v => v.children[0].value === 'cells');
-		if(!cellNode)
-		{
-			return;
-		}
-		cellNode.children[1].children.map(c => {
-			let sourceNode = c.children.find(v => v.children[0].value === 'source');
-			let cellTypeNode = c.children.find(v => v.children[0].value === 'cell_type');
-			let offSetNumber: number = sourceNode.children[1]? sourceNode.children[1].offset : 0;
-			let sourceLength: number = sourceNode.children[1]? sourceNode.children[1].length : 0;
-			let startPosition = model.getPositionAt(offSetNumber);
-			let endPosition = model.getPositionAt(offSetNumber + sourceLength);
-
-			let cellModel = new CellModel(undefined, undefined, undefined, (val: string) => {
-				//let insertString = '"' + val.replace(/[\n\r]/g, '\\n') + '"';
-				let insertString = '"' + val + '"';
-				let editOperation = EditOperation.replace(Range.fromPositions(startPosition, endPosition), insertString);
-				model.applyEdits([editOperation]);
-				endPosition = model.getPositionAt(sourceNode.children[1].offset + insertString.length);
-			});
-			cellModel.cellType = cellTypeNode.children[1].value;
-			cellModel.source = sourceNode.children[1].value;
-			this.inputs.push(cellModel);
-		});
+		return model.getValue();
 	}
+
 
 	save(options: ISaveOptions): TPromise<void> {
 		options.force = false;
+		this.updateModel();
 		return this.textEditorModel.save(options);
 	}
 
@@ -102,12 +75,26 @@ export class NotebookEditorModel extends EditorModel {
 		return this.textEditorModel.isDirty();
 	}
 
-	get textEditorInputs(): CellModel[] {
-		if ((!this.inputs || this.inputs.length === 0) && (this.textEditorModel) ) {
-			this.parse();
+	private updateModel(): void {
+		let notebookModel = this.getNotebookModel();
+		if (notebookModel && this.textEditorModel && this.textEditorModel.textEditorModel) {
+			let content = JSON.stringify(notebookModel.toJSON(), undefined, '    ');
+			this.textEditorModel.textEditorModel.setValue(content);
 		}
-		return this.inputs;
 	}
+
+	isModelCreated(): boolean {
+		return this.getNotebookModel() !== undefined;
+	}
+
+	private getNotebookModel(): INotebookModel {
+		let editor = this.notebookService.listNotebookEditors().find(n => n.id === this.notebookUri.toString());
+		if (editor) {
+			return editor.model;
+		}
+		return undefined;
+	}
+
 	public get providerId(): string {
 		return this._providerId;
 	}
@@ -227,12 +214,12 @@ export class NotebookInput extends EditorInput {
 	}
 
 	async resolve(): TPromise<NotebookEditorModel> {
-		if(this._model && this._model.textEditorInputs && this._model.textEditorInputs.length > 0){
+		if(this._model && this._model.isModelCreated()){
 			return TPromise.as(this._model);
 		}else{
-		const model = await this.textModelService.createModelReference(this.resource);
-		const model_1 = await model.object.load();
-		this._model = this.instantiationService.createInstance(NotebookEditorModel, this.resource, false, model_1, undefined, undefined, undefined);
+		const textEditorModelReference = await this.textModelService.createModelReference(this.resource);
+		const textEditorModel = await textEditorModelReference.object.load();
+		this._model = this.instantiationService.createInstance(NotebookEditorModel, this.resource, false, textEditorModel);
 		return this._model;
 		}
 	}

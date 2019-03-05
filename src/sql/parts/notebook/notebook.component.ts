@@ -101,9 +101,6 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 		super();
 		this.updateProfile();
 		this.isLoading = true;
-		_notebookParams.input.resolve().then(m => {
-			this._cells = m.textEditorInputs;
-		});
 	}
 
 	private updateProfile(): void {
@@ -157,7 +154,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 	}
 
 	public get cells(): ICellModel[] {
-		return this._cells;
+		return this._model ? this._model.cells : [];
 	}
 
 	private updateTheme(theme: IColorTheme): void {
@@ -235,7 +232,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 			this._modelReadyDeferred.reject(error);
 		} finally {
 			// Always add the editor for now to close loop, even if loading contents failed
-			//this.notebookService.addNotebookEditor(this);
+			this.notebookService.addNotebookEditor(this);
 		}
 	}
 
@@ -263,11 +260,11 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 			cellMagicMapper: new CellMagicMapper(this.notebookService.languageMagics),
 			providerId: 'sql', // this is tricky; really should also depend on the connection profile
 			defaultKernel: this._notebookParams.input.defaultKernel,
-			layoutChanged: undefined,//this._notebookParams.input.layoutChanged,
+			layoutChanged: this._notebookParams.input.layoutChanged,
 			capabilitiesService: this.capabilitiesService
-		}, false, this.profile);
+		}, this.notebookParams, false, this.profile);
 		model.onError((errInfo: INotification) => this.handleModelError(errInfo));
-		//await model.requestModelLoad(this._notebookParams.isTrusted);
+		await model.requestModelLoad(this._notebookParams.isTrusted);
 		model.contentChanged((change) => this.handleContentChanged(change));
 		model.onProviderIdChange((provider) => this.handleProviderIdChanged(provider));
 		this._model = this._register(model);
