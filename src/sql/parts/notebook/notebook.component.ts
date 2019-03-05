@@ -72,7 +72,6 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 	private _trustedAction: TrustedAction;
 	private _providerRelatedActions: IAction[] = [];
 
-	private _cells: any;
 
 	constructor(
 		@Inject(forwardRef(() => CommonServiceInterface)) private _bootstrapService: CommonServiceInterface,
@@ -200,7 +199,6 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 	}
 
 	public onKeyDown(event) {
-
 		switch (event.key) {
 			case 'ArrowDown':
 			case 'ArrowRight':
@@ -218,7 +216,6 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 			default:
 				break;
 		}
-
 	}
 
 	private async doLoad(): Promise<void> {
@@ -243,7 +240,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 
 	private async loadModel(): Promise<void> {
 		await this.awaitNonDefaultProvider();
-		let providerId =  'sql'; // notebookUtils.sqlNotebooksEnabled(this.contextKeyService) ? 'sql' : this._notebookParams.providers.find(provider => provider !== DEFAULT_NOTEBOOK_PROVIDER); // this is tricky; really should also depend on the connection profile
+		let providerId =  'sql'; // this is tricky; really should also depend on the connection profile
 		this.setContextKeyServiceWithProviderId(providerId);
 		this.fillInActionsForCurrentContext();
 		for (let providerId of this._notebookParams.providers) {
@@ -471,7 +468,7 @@ export class NotebookComponent extends AngularDisposable implements OnInit, OnDe
 
 	private setDirty(isDirty: boolean): void {
 		if (this._notebookParams.input) {
-			// this._notebookParams.input.setDirty(isDirty);
+			this._notebookParams.input.setDirty(isDirty);
 		}
 	}
 

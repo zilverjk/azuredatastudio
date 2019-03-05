@@ -77,7 +77,7 @@ export class NotebookEditor extends BaseEditor {
 			return TPromise.wrap<void>(this.bootstrapAngular(input));
 		} else {
 			this._notebookContainer = DOM.append(parentElement, input.container);
-			 input.doChangeLayout();
+			input.doChangeLayout();
 			return TPromise.wrap<void>(null);
 		}
 	}
@@ -93,7 +93,7 @@ export class NotebookEditor extends BaseEditor {
 			input: input,
 			providerId: input.providerId ? input.providerId : DEFAULT_NOTEBOOK_PROVIDER,
 			providers: input.providers ? input.providers : [DEFAULT_NOTEBOOK_PROVIDER],
-			isTrusted: false,
+			isTrusted: input.isTrusted,
 			connectionProfileId: input.connectionProfileId
 		};
 		bootstrapAngular(this.instantiationService,
@@ -105,3 +105,4 @@ export class NotebookEditor extends BaseEditor {
 		);
 	}
 }
+

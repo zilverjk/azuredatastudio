@@ -137,10 +137,6 @@ export class CellModel implements ICellModel {
 		return this._cellType;
 	}
 
-	public set cellType(val : CellType) {
-		this._cellType = val;
-	}
-
 	public get source(): string {
 		return this._source;
 	}
@@ -159,7 +155,7 @@ export class CellModel implements ICellModel {
 		if (this._language) {
 			return this._language;
 		}
-		return '';
+		return this.options.notebook.language;
 	}
 
 	public setOverrideLanguage(newLanguage: string) {

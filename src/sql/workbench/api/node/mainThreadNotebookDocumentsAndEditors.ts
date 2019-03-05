@@ -300,7 +300,7 @@ export class MainThreadNotebookDocumentsAndEditors extends Disposable implements
 		}
 
 		// Create a state computer that actually tracks all required changes. This is hooked to onDelta which notifies extension host
-		 this._register(this._instantiationService.createInstance(MainThreadNotebookDocumentAndEditorStateComputer, delta => this._onDelta(delta)));
+		this._register(this._instantiationService.createInstance(MainThreadNotebookDocumentAndEditorStateComputer, delta => this._onDelta(delta)));
 	}
 
 	//#region extension host callable APIs

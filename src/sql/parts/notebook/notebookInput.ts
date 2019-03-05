@@ -75,6 +75,14 @@ export class NotebookEditorModel extends EditorModel {
 		return this.textEditorModel.isDirty();
 	}
 
+	public setDirty(dirty: boolean): void {
+		if (this.dirty === dirty) {
+			return;
+		}
+		this.dirty = dirty;
+		this._onDidChangeDirty.fire();
+	}
+
 	private updateModel(): void {
 		let notebookModel = this.getNotebookModel();
 		if (notebookModel && this.textEditorModel && this.textEditorModel.textEditorModel) {
