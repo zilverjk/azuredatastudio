@@ -39,7 +39,7 @@ export class CellModel implements ICellModel {
 	private _cellUri: URI;
 	public id: string;
 
-	constructor(private factory: IModelFactory, cellData?: nb.ICellContents, private _options?: ICellModelOptions, public updateValue?: (val: string) => void) {
+	constructor(private factory: IModelFactory, cellData?: nb.ICellContents, private _options?: ICellModelOptions) {
 		this.id = `${modelId++}`;
 		if (cellData) {
 			// Read in contents if available

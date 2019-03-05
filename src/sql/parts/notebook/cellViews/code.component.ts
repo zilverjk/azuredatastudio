@@ -30,7 +30,6 @@ import { IConfigurationService } from 'vs/platform/configuration/common/configur
 import { Emitter, debounceEvent } from 'vs/base/common/event';
 import { CellTypes } from 'sql/parts/notebook/models/contracts';
 import { OVERRIDE_EDITOR_THEMING_SETTING } from 'sql/workbench/services/notebook/common/notebookService';
-import { CellModel } from 'sql/parts/notebook/models/cell';
 import * as notebookUtils from 'sql/parts/notebook/notebookUtils';
 import { UntitledEditorModel } from 'vs/workbench/common/editor/untitledEditorModel';
 import { IConnectionManagementService } from 'sql/platform/connection/common/connectionManagement';
@@ -47,11 +46,11 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	@ViewChild('moreactions', { read: ElementRef }) private moreActionsElementRef: ElementRef;
 	@ViewChild('editor', { read: ElementRef }) private codeElement: ElementRef;
 
-	public get cellModel(): CellModel {
+	public get cellModel(): ICellModel {
 		return this._cellModel;
 	}
 
-	@Input() public set cellModel(value: CellModel) {
+	@Input() public set cellModel(value: ICellModel) {
 		this._cellModel = value;
 		if (this.toolbarElement && value && value.cellType === CellTypes.Markdown) {
 			let nativeToolbar = <HTMLElement> this.toolbarElement.nativeElement;
@@ -91,7 +90,7 @@ export class CodeComponent extends AngularDisposable implements OnInit, OnChange
 	protected _actionBar: Taskbar;
 	private readonly _minimumHeight = 30;
 	private readonly _maximumHeight = 4000;
-	private _cellModel: CellModel;
+	private _cellModel: ICellModel;
 	private _editor: QueryTextEditor;
 	private _editorInput: UntitledEditorInput;
 	private _editorModel: ITextModel;
