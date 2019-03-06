@@ -15,9 +15,7 @@ import { Builder } from 'sql/base/browser/builder';
 import { UntitledEditorInput } from 'vs/workbench/common/editor/untitledEditorInput';
 
 import { QueryResultsInput } from 'sql/parts/query/common/queryResultsInput';
-import { QueryModelService } from 'sql/parts/query/execution/queryModelService';
 import { QueryInput } from 'sql/parts/query/common/queryInput';
-import { ConnectionManagementService } from 'sql/parts/connection/common/connectionManagementService';
 import { RunQueryAction, ListDatabasesActionItem } from 'sql/parts/query/execution/queryActions';
 import { EditorDescriptorService } from 'sql/workbench/services/queryEditor/common/editorDescriptorService';
 
@@ -29,7 +27,8 @@ import { BaseEditor } from 'vs/workbench/browser/parts/editor/baseEditor';
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { TestNotificationService } from 'vs/platform/notification/test/common/testNotificationService';
 import { ConfigurationService } from 'vs/platform/configuration/node/configurationService';
-import { TestStorageService } from 'vs/workbench/test/workbenchTestServices';
+import { QueryModelService } from 'sql/platform/query/common/queryModelService';
+import { ConnectionManagementService } from 'sql/platform/connection/common/connectionManagementService';
 
 suite('SQL QueryEditor Tests', () => {
 	let queryModelService: QueryModelService;

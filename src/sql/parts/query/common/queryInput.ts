@@ -7,17 +7,17 @@ import { TPromise } from 'vs/base/common/winjs.base';
 import { localize } from 'vs/nls';
 import { IDisposable } from 'vs/base/common/lifecycle';
 import { Event, Emitter } from 'vs/base/common/event';
-import URI from 'vs/base/common/uri';
+import { URI } from 'vs/base/common/uri';
 import { UntitledEditorInput } from 'vs/workbench/common/editor/untitledEditorInput';
 import { EditorInput, EditorModel, ConfirmResult, EncodingMode, IEncodingSupport } from 'vs/workbench/common/editor';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 
-import { IConnectionManagementService, IConnectableInput, INewConnectionParams, RunQueryOnConnectionMode, ConnectionType } from 'sql/parts/connection/common/connectionManagement';
 import { QueryResultsInput } from 'sql/parts/query/common/queryResultsInput';
-import { IQueryModelService } from 'sql/parts/query/execution/queryModel';
 
-import * as sqlops from 'sqlops';
+import * as azdata from 'azdata';
 import { IRange } from 'vs/editor/common/core/range';
+import { IConnectableInput, IConnectionManagementService, RunQueryOnConnectionMode, INewConnectionParams, ConnectionType } from 'sql/platform/connection/common/connectionManagement';
+import { IQueryModelService } from 'sql/platform/query/common/queryModel';
 
 const MAX_SIZE = 13;
 
@@ -217,7 +217,7 @@ export class QueryInput extends EditorInput implements IEncodingSupport, IConnec
 	}
 
 	// State update funtions
-	public runQuery(range?: IRange, executePlanOptions?: sqlops.ExecutionPlanOptions): void {
+	public runQuery(range?: IRange, executePlanOptions?: azdata.ExecutionPlanOptions): void {
 		let selection = this.rangeToSelection(range);
 		if (this.isConnected()) {
 			this._queryModelService.runQuery(this.uri, selection, this, executePlanOptions);
@@ -252,7 +252,7 @@ export class QueryInput extends EditorInput implements IEncodingSupport, IConnec
 		}
 	}
 
-	private rangeToSelection(range: IRange): sqlops.ISelectionData {
+	private rangeToSelection(range: IRange): azdata.ISelectionData {
 		return range ? {
 			startColumn: range.startColumn - 1,
 			startLine: range.startLineNumber - 1,

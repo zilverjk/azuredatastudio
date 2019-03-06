@@ -6,7 +6,6 @@
 import 'vs/css!sql/parts/query/editor/media/queryActions';
 
 import * as nls from 'vs/nls';
-import { Builder, $ } from 'vs/base/browser/builder';
 import { Disposable } from 'vs/base/common/lifecycle';
 import { TPromise } from 'vs/base/common/winjs.base';
 import { IContextViewService } from 'vs/platform/contextview/browser/contextView';
@@ -27,19 +26,14 @@ import { ContextKeyExpr } from 'vs/platform/contextkey/common/contextkey';
 import { EditorContextKeys } from 'vs/editor/common/editorContextKeys';
 
 import { Dropdown } from 'sql/base/browser/ui/editableDropdown/dropdown';
-import { attachEditableDropdownStyler } from 'sql/common/theme/styler';
-import {
-	IConnectionManagementService,
-	IConnectionParams,
-	INewConnectionParams,
-	ConnectionType,
-	RunQueryOnConnectionMode
-} from 'sql/parts/connection/common/connectionManagement';
 import { SelectBox } from 'sql/base/browser/ui/selectBox/selectBox';
 import { QueryInput } from 'sql/parts/query/common/queryInput';
 import { QueryEditorAction } from 'sql/parts/query/editor/queryEditorExtensions';
 import { QueryEditorContextKeys } from 'sql/parts/query/editor/queryEditorContextKeys';
-import { IQueryManagementService } from 'sql/parts/query/common/queryManagement';
+import { IConnectionManagementService, INewConnectionParams, ConnectionType, RunQueryOnConnectionMode, IConnectionParams } from 'sql/platform/connection/common/connectionManagement';
+import { IQueryManagementService } from 'sql/platform/query/common/queryManagement';
+import { Builder, $ } from 'sql/base/browser/builder';
+import { attachEditableDropdownStyler } from 'sql/platform/theme/common/styler';
 
 export interface IQueryActionContext {
 	input: QueryInput;

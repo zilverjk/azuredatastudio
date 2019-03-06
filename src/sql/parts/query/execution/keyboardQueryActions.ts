@@ -9,7 +9,6 @@ import { Action } from 'vs/base/common/actions';
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 import { TPromise } from 'vs/base/common/winjs.base';
 import { IWorkspaceConfigurationService } from 'vs/workbench/services/configuration/common/configuration';
-import { INotificationService, Severity } from 'vs/platform/notification/common/notification';
 import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
 
 import * as azdata from 'azdata';
@@ -20,7 +19,7 @@ import { QueryEditor } from 'sql/parts/query/editor/queryEditor';
 import { IQueryModelService } from 'sql/platform/query/common/queryModel';
 import * as WorkbenchUtils from 'sql/workbench/common/sqlWorkbenchUtils';
 import * as Constants from 'sql/parts/query/common/constants';
-import * as ConnectionConstants from 'sql/parts/connection/common/constants';
+import { mssqlProviderName } from 'sql/platform/connection/common/constants';
 
 const singleQuote = '\'';
 
@@ -224,7 +223,7 @@ export class RunQueryShortcutAction extends Action {
 
 	private canQueryProcMetadata(editor: QueryEditor): boolean {
 		let info = this._connectionManagementService.getConnectionInfo(editor.input.uri);
-		return (info && info.providerId === ConnectionConstants.mssqlProviderName);
+		return (info && info.providerId === mssqlProviderName);
 	}
 
 	private getDatabaseName(editor: QueryEditor): string {

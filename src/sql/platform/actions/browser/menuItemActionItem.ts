@@ -12,10 +12,10 @@ import { INotificationService } from 'vs/platform/notification/common/notificati
 import { IContextMenuService } from 'vs/platform/contextview/browser/contextView';
 import { ActionItem } from 'vs/base/browser/ui/actionbar/actionbar';
 import { IdGenerator } from 'vs/base/common/idGenerator';
-import { IDisposable, dispose } from 'vs/base/common/lifecycle';
+import { IDisposable, dispose, toDisposable } from 'vs/base/common/lifecycle';
 import { domEvent } from 'vs/base/browser/event';
 import { localize } from 'vs/nls';
-import { createCSSRule } from 'vs/base/browser/dom';
+import { createCSSRule, addClasses, removeClasses } from 'vs/base/browser/dom';
 import { AlternativeKeyEmitter } from 'vs/platform/actions/browser/menuItemActionItem';
 
 export interface IMenuItemActionItemOptions {
@@ -37,6 +37,7 @@ export class MenuItemActionItem extends ActionItem {
 
 	private _wantsAltCommand: boolean;
 	private _itemClassDispose: IDisposable;
+	private readonly _altKey: AlternativeKeyEmitter;
 
 	constructor(
 		public _action: MenuItemAction,
@@ -46,6 +47,7 @@ export class MenuItemActionItem extends ActionItem {
 		@IContextMenuService private readonly _contextMenuService: IContextMenuService
 	) {
 		super(undefined, _action, { icon: !!(_action.class || _action.item.iconLocation), label: options.label || (!_action.class && !_action.item.iconLocation) });
+		this._altKey = AlternativeKeyEmitter.getInstance(_contextMenuService);
 	}
 
 	protected get _commandAction(): IAction {
@@ -62,7 +64,7 @@ export class MenuItemActionItem extends ActionItem {
 		}
 
 		this.actionRunner.run(this._commandAction)
-			.done(undefined, err => this._notificationService.error(err));
+			.then(undefined, err => this._notificationService.error(err));
 	}
 
 	render(container: HTMLElement): void {
@@ -84,17 +86,19 @@ export class MenuItemActionItem extends ActionItem {
 			}
 		};
 
-		this._callOnDispose.push(alternativeKeyEmitter.event(value => {
-			alternativeKeyDown = value;
-			updateAltState();
-		}));
+		if (this._action.alt) {
+			this._register(this._altKey.event(value => {
+				alternativeKeyDown = value;
+				updateAltState();
+			}));
+		}
 
-		this._callOnDispose.push(domEvent(container, 'mouseleave')(_ => {
+		this._register(domEvent(container, 'mouseleave')(_ => {
 			mouseOver = false;
 			updateAltState();
 		}));
 
-		this._callOnDispose.push(domEvent(container, 'mouseenter')(e => {
+		this._register(domEvent(container, 'mouseenter')(e => {
 			mouseOver = true;
 			updateAltState();
 		}));
@@ -102,12 +106,12 @@ export class MenuItemActionItem extends ActionItem {
 
 	_updateLabel(): void {
 		if (this.options.label) {
-			this.$e.text(this._commandAction.label);
+			this.label.textContent = this._commandAction.label;
 		}
 	}
 
 	_updateTooltip(): void {
-		const element = this.$e.getHTMLElement();
+		const element = this.label;
 		const keybinding = this._keybindingService.lookupKeybinding(this._commandAction.id);
 		const keybindingLabel = keybinding && keybinding.getLabel();
 
@@ -144,8 +148,8 @@ export class MenuItemActionItem extends ActionItem {
 				MenuItemActionItem.ICON_PATH_TO_CSS_RULES.set(iconPathMapKey, iconClass);
 			}
 
-			this.$e.getHTMLElement().classList.add('icon', iconClass);
-			this._itemClassDispose = { dispose: () => this.$e.getHTMLElement().classList.remove('icon', iconClass) };
+			addClasses(this.label, 'icon', iconClass);
+			this._itemClassDispose = toDisposable(() => removeClasses(this.label, 'icon', iconClass));
 		}
 	}
 

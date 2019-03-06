@@ -10,7 +10,7 @@ import { ICodeEditor } from 'vs/editor/browser/editorBrowser';
 import { TPromise } from 'vs/base/common/winjs.base';
 import { MenuRegistry, MenuId } from 'vs/platform/actions/common/actions';
 import { ContextKeyExpr } from 'vs/platform/contextkey/common/contextkey';
-import URI from 'vs/base/common/uri';
+import { URI } from 'vs/base/common/uri';
 import { deepClone } from 'vs/base/common/objects';
 
 export interface IQueryEditorCommandMenuOptions extends IEditorCommandMenuOptions {
