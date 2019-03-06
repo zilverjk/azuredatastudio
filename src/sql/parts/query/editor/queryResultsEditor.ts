@@ -18,7 +18,6 @@ import * as DOM from 'vs/base/browser/dom';
 import * as types from 'vs/base/common/types';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { IStorageService } from 'vs/platform/storage/common/storage';
-import { Event } from 'vs/base/common/event';
 
 import { QueryResultsInput } from 'sql/parts/query/common/queryResultsInput';
 import { IQueryModelService } from 'sql/platform/query/common/queryModel';
