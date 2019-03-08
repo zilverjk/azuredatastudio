@@ -8,7 +8,7 @@ import { QueryResultsInput, ResultsViewState } from 'sql/parts/query/common/quer
 import { TabbedPanel, IPanelTab, IPanelView } from 'sql/base/browser/ui/panel/panel';
 import { IQueryModelService } from 'sql/platform/query/common/queryModel';
 import QueryRunner from 'sql/platform/query/common/queryRunner';
-import { MessagePanel } from './messagePanel';
+import { MessageTab } from './messagePanel';
 import { GridPanel } from './gridPanel';
 import { ChartTab } from './charting/chartTab';
 import { QueryPlanTab } from 'sql/parts/queryPlan/queryPlan';
@@ -24,7 +24,6 @@ import { IDisposable, dispose, Disposable } from 'vs/base/common/lifecycle';
 class ResultsView extends Disposable implements IPanelView {
 	private panelViewlet: PanelViewlet;
 	private gridPanel: GridPanel;
-	private messagePanel: MessagePanel;
 	private container = document.createElement('div');
 	private currentDimension: DOM.Dimension;
 	private needsGridResize = false;
@@ -34,15 +33,10 @@ class ResultsView extends Disposable implements IPanelView {
 		super();
 		this.panelViewlet = this._register(this.instantiationService.createInstance(PanelViewlet, 'resultsView', { showHeaderInTitleWhenSingleView: false }));
 		this.gridPanel = this._register(this.instantiationService.createInstance(GridPanel, { title: nls.localize('gridPanel', 'Results'), id: 'gridPanel' }));
-		this.messagePanel = this._register(this.instantiationService.createInstance(MessagePanel, { title: nls.localize('messagePanel', 'Messages'), minimumBodySize: 0, id: 'messagePanel' }));
 		this.gridPanel.render();
-		this.messagePanel.render();
 		this.panelViewlet.create(this.container);
 		this.gridPanel.setVisible(false);
-		this.panelViewlet.addPanels([
-			{ panel: this.messagePanel, size: this.messagePanel.minimumSize, index: 1 }
-		]);
-		anyEvent(this.gridPanel.onDidChange, this.messagePanel.onDidChange)(e => {
+		anyEvent(this.gridPanel.onDidChange)(e => {
 			let size = this.gridPanel.maximumBodySize;
 			if (size < 1 && this.gridPanel.isVisible()) {
 				this.gridPanel.setVisible(false);
@@ -62,7 +56,7 @@ class ResultsView extends Disposable implements IPanelView {
 				this.panelViewlet.addPanels([{ panel: this.gridPanel, index: 0, size: panelSize }]);
 			}
 		});
-		let resizeList = anyEvent(this.gridPanel.onDidChange, this.messagePanel.onDidChange)(() => {
+		let resizeList = anyEvent(this.gridPanel.onDidChange)(() => {
 			let panelSize: number;
 			if (this.state && this.state.gridPanelSize) {
 				panelSize = this.state.gridPanelSize;
@@ -87,9 +81,6 @@ class ResultsView extends Disposable implements IPanelView {
 			if (this.state) {
 				if (this.gridPanel.isExpanded()) {
 					this.state.gridPanelSize = this.panelViewlet.getPanelSize(this.gridPanel);
-				}
-				if (this.messagePanel.isExpanded()) {
-					this.state.messagePanelSize = this.panelViewlet.getPanelSize(this.messagePanel);
 				}
 			}
 		});
@@ -117,7 +108,6 @@ class ResultsView extends Disposable implements IPanelView {
 
 	public clear() {
 		this.gridPanel.clear();
-		this.messagePanel.clear();
 	}
 
 	remove(): void {
@@ -126,7 +116,6 @@ class ResultsView extends Disposable implements IPanelView {
 
 	public set queryRunner(runner: QueryRunner) {
 		this.gridPanel.queryRunner = runner;
-		this.messagePanel.queryRunner = runner;
 	}
 
 	public hideResultHeader() {
@@ -136,7 +125,6 @@ class ResultsView extends Disposable implements IPanelView {
 	public set state(val: ResultsViewState) {
 		this._state = val;
 		this.gridPanel.state = val.gridPanelState;
-		this.messagePanel.state = val.messagePanelState;
 	}
 
 	public get state(): ResultsViewState {
@@ -172,6 +160,7 @@ export class QueryResultsView extends Disposable {
 	private resultsTab: ResultsTab;
 	private chartTab: ChartTab;
 	private qpTab: QueryPlanTab;
+	private messageTab: MessageTab;
 	private topOperationsTab: TopOperationsTab;
 
 	private runnerDisposables: IDisposable[];
@@ -187,8 +176,10 @@ export class QueryResultsView extends Disposable {
 		this._panelView = this._register(new TabbedPanel(container, { showHeaderWhenSingleView: false }));
 		this.qpTab = this._register(new QueryPlanTab());
 		this.topOperationsTab = this._register(new TopOperationsTab(instantiationService));
+		this.messageTab = this._register(new MessageTab(instantiationService));
 
 		this._panelView.pushTab(this.resultsTab);
+		this._panelView.pushTab(this.messageTab);
 		this._register(this._panelView.onTabChange(e => {
 			if (this.input) {
 				this.input.state.activeTab = e;
@@ -201,6 +192,7 @@ export class QueryResultsView extends Disposable {
 
 	private setQueryRunner(runner: QueryRunner) {
 		this.resultsTab.queryRunner = runner;
+		this.messageTab.queryRunner = runner;
 		this.chartTab.queryRunner = runner;
 		this.runnerDisposables.push(runner.onQueryStart(e => {
 			this.hideChart();
@@ -240,6 +232,7 @@ export class QueryResultsView extends Disposable {
 		dispose(this.runnerDisposables);
 		this.runnerDisposables = [];
 		this.resultsTab.view.state = this.input.state;
+		this.messageTab.view.state = this.input.state.messagePanelState;
 		this.qpTab.view.state = this.input.state.queryPlanState;
 		this.topOperationsTab.view.state = this.input.state.topOperationsState;
 		this.chartTab.view.state = this.input.state.chartState;

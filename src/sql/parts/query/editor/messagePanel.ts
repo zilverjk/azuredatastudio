@@ -10,13 +10,11 @@ import QueryRunner from 'sql/platform/query/common/queryRunner';
 import { QueryInput } from 'sql/parts/query/common/queryInput';
 import { $ } from 'sql/base/browser/builder';
 
-import { IResultMessage, ISelectionData } from 'azdata';
+import { IResultMessage, ISelectionData } from 'sqlops';
 
-import { ViewletPanel, IViewletPanelOptions } from 'vs/workbench/browser/parts/views/panelViewlet';
 import { IDataSource, ITree, IRenderer, ContextMenuEvent } from 'vs/base/parts/tree/browser/tree';
 import { TPromise } from 'vs/base/common/winjs.base';
 import { generateUuid } from 'vs/base/common/uuid';
-import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
 import { IContextMenuService } from 'vs/platform/contextview/browser/contextView';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 import { Tree } from 'vs/base/parts/tree/browser/treeImpl';
@@ -27,10 +25,13 @@ import { OpenMode, ClickBehavior, ICancelableEvent, IControllerOptions } from 'v
 import { WorkbenchTreeController } from 'vs/platform/list/browser/listService';
 import { IMouseEvent } from 'vs/base/browser/mouseEvent';
 import { isArray, isUndefinedOrNull } from 'vs/base/common/types';
-import { IDisposable, dispose } from 'vs/base/common/lifecycle';
+import { IDisposable, dispose, Disposable } from 'vs/base/common/lifecycle';
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 import { ScrollbarVisibility } from 'vs/base/common/scrollable';
 import { IClipboardService } from 'vs/platform/clipboard/common/clipboardService';
+import { IPanelTab, IPanelView } from 'sql/base/browser/ui/panel/panel';
+import { localize } from 'vs/nls';
+import { Dimension } from 'vs/base/browser/dom';
 
 export interface IResultMessageIntern extends IResultMessage {
 	id?: string;
@@ -77,7 +78,29 @@ export class MessagePanelState {
 	}
 }
 
-export class MessagePanel extends ViewletPanel {
+export class MessageTab implements IPanelTab {
+	public readonly title = localize('resultsTabTitle', 'Results');
+	public readonly identifier = 'resultsTab';
+	public readonly view: MessagePanel;
+
+	constructor(instantiationService: IInstantiationService) {
+		this.view = instantiationService.createInstance(MessagePanel);
+	}
+
+	public set queryRunner(runner: QueryRunner) {
+		this.view.queryRunner = runner;
+	}
+
+	public dispose() {
+		dispose(this.view);
+	}
+
+	public clear() {
+		this.view.clear();
+	}
+}
+
+export class MessagePanel extends Disposable implements IPanelView {
 	private messageLineCountMap = new Map<IResultMessage, number>();
 	private ds = new MessageDataSource();
 	private renderer = new MessageRenderer(this.messageLineCountMap);
@@ -89,18 +112,16 @@ export class MessagePanel extends ViewletPanel {
 	private _state: MessagePanelState;
 
 	private tree: ITree;
-	private _selectAllMessages: boolean;
 
 	constructor(
-		options: IViewletPanelOptions,
-		@IKeybindingService keybindingService: IKeybindingService,
 		@IContextMenuService contextMenuService: IContextMenuService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@IThemeService private themeService: IThemeService,
 		@IInstantiationService instantiationService: IInstantiationService,
+		@IThemeService private themeService: IThemeService,
 		@IClipboardService private clipboardService: IClipboardService
 	) {
-		super(options, keybindingService, contextMenuService, configurationService);
+		super();
+		this.container.style.width = '100%';
+		this.container.style.height = '100%';
 		this.controller = instantiationService.createInstance(MessageController, { openMode: OpenMode.SINGLE_CLICK, clickBehavior: ClickBehavior.ON_MOUSE_UP /* do not change, to preserve focus behaviour in input field */ });
 		this.controller.toFocusOnClick = this.model;
 		this.tree = new Tree(this.container, {
@@ -108,15 +129,11 @@ export class MessagePanel extends ViewletPanel {
 			renderer: this.renderer,
 			controller: this.controller
 		}, { keyboardSupport: false, horizontalScrollMode: ScrollbarVisibility.Auto });
-		this.disposables.push(this.tree);
+		this._register(this.tree);
+		this.tree.setInput(this.model);
 		this.tree.onDidScroll(e => {
 			if (this.state) {
 				this.state.scrollPosition = this.tree.getScrollPosition();
-			}
-		});
-		this.onDidChange(e => {
-			if (this.state) {
-				this.state.collapsed = !this.isExpanded();
 			}
 		});
 		this.controller.onKeyDown = (tree, event) => {
@@ -148,7 +165,7 @@ export class MessagePanel extends ViewletPanel {
 
 			const selection = document.getSelection();
 
-			this.contextMenuService.showContextMenu({
+			contextMenuService.showContextMenu({
 				getAnchor: () => {
 					return { x: event.posx, y: event.posy };
 				},
@@ -170,17 +187,14 @@ export class MessagePanel extends ViewletPanel {
 		};
 	}
 
-	protected renderBody(container: HTMLElement): void {
-		this.container.style.width = '100%';
-		this.container.style.height = '100%';
-		this.disposables.push(attachListStyler(this.tree, this.themeService));
+	public render(container: HTMLElement): void {
+		this._register(attachListStyler(this.tree, this.themeService));
 		container.appendChild(this.container);
-		this.tree.setInput(this.model);
 	}
 
-	protected layoutBody(size: number): void {
+	public layout(dimension: Dimension): void {
 		const previousScrollPosition = this.tree.getScrollPosition();
-		this.tree.layout(size);
+		this.tree.layout(dimension.height);
 		if (this.state && this.state.scrollPosition) {
 			this.tree.setScrollPosition(this.state.scrollPosition);
 		} else {
@@ -210,10 +224,6 @@ export class MessagePanel extends ViewletPanel {
 			hasError = message.isError;
 			lines = this.countMessageLines(message);
 			this.model.messages.push(message);
-		}
-		this.maximumBodySize += lines * 22;
-		if (hasError) {
-			this.setExpanded(true);
 		}
 		if (this.state.scrollPosition) {
 			this.tree.refresh(this.model).then(() => {
@@ -248,7 +258,6 @@ export class MessagePanel extends ViewletPanel {
 		if (this.state.scrollPosition) {
 			this.tree.setScrollPosition(this.state.scrollPosition);
 		}
-		this.setExpanded(!this.state.collapsed);
 	}
 
 	public get state(): MessagePanelState {
